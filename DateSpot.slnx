@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="DateSpot.Api/DateSpot.Api.csproj" />
+  <Project Path="DateSpot.Application/DateSpot.Application.csproj" />
+  <Project Path="DateSpot.Core/DateSpot.Core.csproj" />
+  <Project Path="DateSpot.Infrastructure/DateSpot.Infrastructure.csproj" />
+</Solution>

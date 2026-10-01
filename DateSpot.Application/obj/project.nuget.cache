@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "Bmc63kndcl0=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.Application\\DateSpot.Application.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\tunca\\.nuget\\packages\\nettopologysuite\\2.6.0\\nettopologysuite.2.6.0.nupkg.sha512"
+  ],
+  "logs": []
+}
