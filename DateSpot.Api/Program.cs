@@ -33,13 +33,16 @@ builder.Services.AddCors(options =>
     });
 });
 
-// PostgreSQL + PostGIS DbContext Kaydı
-var connectionString = builder.Configuration.GetConnectionString("PostgreSql") 
+// PostgreSQL / Supabase Connection String Çözücü
+var rawConn = Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? builder.Configuration.GetConnectionString("PostgreSql") 
     ?? "Host=localhost;Port=5432;Database=datespot_db;Username=postgres;Password=postgres";
+
+var formattedConnectionString = ParsePostgreSqlConnectionString(rawConn);
 
 builder.Services.AddDbContext<DateSpotDbContext>(options =>
 {
-    options.UseNpgsql(connectionString, o => o.UseNetTopologySuite());
+    options.UseNpgsql(formattedConnectionString, o => o.UseNetTopologySuite());
 });
 
 // HTTP Clients
@@ -69,12 +72,49 @@ try
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<DateSpotDbContext>();
+    await dbContext.Database.EnsureCreatedAsync();
     await DbInitializer.SeedVenuesAsync(dbContext);
     Console.WriteLine("✅ İstanbul First Date mekanları veritabanına başarıyla yüklendi.");
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"⚠️ Veritabanı bağlantısı henüz aktif değil veya tohumlama atlandı: {ex.Message}");
+    Console.WriteLine($"⚠️ Veritabanı tohumlama atlandı / bağlantı hazır değil: {ex.Message}");
 }
 
 app.Run();
+
+static string ParsePostgreSqlConnectionString(string input)
+{
+    if (string.IsNullOrWhiteSpace(input)) return input;
+
+    // Eğer postgresql:// veya postgres:// formatında URI ise Npgsql formatına çevir
+    if (input.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) || 
+        input.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase))
+    {
+        try
+        {
+            var uri = new Uri(input);
+            var userInfo = uri.UserInfo.Split(':');
+            var user = userInfo.Length > 0 ? userInfo[0] : "postgres";
+            var pass = userInfo.Length > 1 ? userInfo[1] : "";
+            var host = uri.Host;
+            var port = uri.Port > 0 ? uri.Port : 5432;
+            var db = uri.AbsolutePath.TrimStart('/');
+            if (string.IsNullOrEmpty(db)) db = "postgres";
+
+            return $"Host={host};Port={port};Database={db};Username={user};Password={pass};SSL Mode=Require;Trust Server Certificate=true;Timeout=15;Command Timeout=15;";
+        }
+        catch
+        {
+            return input;
+        }
+    }
+
+    // Zaten Host= formatındaysa ve SSL içermiyorsa ekle
+    if (!input.Contains("SSL Mode", StringComparison.OrdinalIgnoreCase) && !input.Contains("localhost", StringComparison.OrdinalIgnoreCase))
+    {
+        input += ";SSL Mode=Require;Trust Server Certificate=true;Timeout=15;Command Timeout=15;";
+    }
+
+    return input;
+}

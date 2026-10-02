@@ -28,3 +28,4 @@ C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Application\obj\Debug
 C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Application\obj\Debug\net10.0\refint\DateSpot.Application.dll
 C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Application\obj\Debug\net10.0\DateSpot.Application.pdb
 C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Application\obj\Debug\net10.0\ref\DateSpot.Application.dll
+C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Application\obj\Debug\net10.0\DateSpot.Application.sourcelink.json

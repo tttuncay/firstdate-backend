@@ -909,4 +909,259 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
     }
+
+    public static List<Venue> GetStaticSeedVenues(string? district, List<string>? coveredDistricts)
+    {
+        var gf = new GeometryFactory(new PrecisionModel(), 4326);
+        var all = new List<Venue>
+        {
+            new Venue
+            {
+                Id = Guid.NewGuid(),
+                Name = "Viktor Levi Şarap Evi",
+                District = "Kadıköy",
+                Neighborhood = "Moda",
+                Address = "Caferağa Mah. Moda Cad. Damacı Sok. No:4, Kadıköy",
+                Location = gf.CreatePoint(new Coordinate(29.0268, 40.9875)),
+                PriceLevel = PriceLevel.Moderate,
+                NoiseLevel = NoiseLevel.ModerateMusic,
+                CompatibleConcepts = new() { DateConcept.RomanticAndChic, DateConcept.QuietAndIntimate },
+                VibeTags = new() { "Tarihi Mahzen", "Sarmaşıklı Bahçe", "Mum Işığı", "Romantik", "Şarap Evi" },
+                SeatingArrangement = "Sarmaşıklar altında ahşap masalar ve loş iç mahzen",
+                HasAlcohol = true,
+                HasValetParking = false,
+                RequiresReservation = true,
+                HasOutdoorSeating = true,
+                FirstDateSuitabilityScore = 9.8,
+                GoogleRating = 4.7,
+                HeroImageUrl = "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=1200",
+                GoogleMapsUrl = "https://maps.google.com/?q=Viktor+Levi+Kadıköy",
+                InstagramHandle = "@viktorlevisarap"
+            },
+            new Venue
+            {
+                Id = Guid.NewGuid(),
+                Name = "Minoa Books & Coffee",
+                District = "Beşiktaş",
+                Neighborhood = "Akaretler",
+                Address = "Vişnezade Mah. Süleyman Seba Cad. No:52/A, Akaretler, Beşiktaş",
+                Location = gf.CreatePoint(new Coordinate(29.0010, 41.0425)),
+                PriceLevel = PriceLevel.Moderate,
+                NoiseLevel = NoiseLevel.WhisperQuiet,
+                CompatibleConcepts = new() { DateConcept.CoffeeAndWalk, DateConcept.QuietAndIntimate },
+                VibeTags = new() { "Kitap & Sanat", "Entelektüel", "Sessiz Arka Bahçe", "3. Nesil Kahve", "Butik" },
+                SeatingArrangement = "Kitap rafları arasında ahşap masalar ve kış bahçesi",
+                HasAlcohol = true,
+                HasValetParking = false,
+                RequiresReservation = false,
+                HasOutdoorSeating = true,
+                FirstDateSuitabilityScore = 9.7,
+                GoogleRating = 4.8,
+                HeroImageUrl = "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=1200",
+                GoogleMapsUrl = "https://maps.google.com/?q=Minoa+Akaretler",
+                InstagramHandle = "@minoabooksandcoffee"
+            },
+            new Venue
+            {
+                Id = Guid.NewGuid(),
+                Name = "Pano Şarap Evi 1898",
+                District = "Beyoğlu",
+                Neighborhood = "Galatasaray",
+                Address = "Hüseyinağa Mah. Hamalbaşı Cad. No:16, Beyoğlu",
+                Location = gf.CreatePoint(new Coordinate(28.9760, 41.0345)),
+                PriceLevel = PriceLevel.Moderate,
+                NoiseLevel = NoiseLevel.WhisperQuiet,
+                CompatibleConcepts = new() { DateConcept.RomanticAndChic, DateConcept.QuietAndIntimate },
+                VibeTags = new() { "1898 Mirası", "Vitray Camlar", "Romantik Mahzen", "Şarap Evi" },
+                SeatingArrangement = "Tarihi vitraylı ahşap localar ve mum ışıklı masalar",
+                HasAlcohol = true,
+                HasValetParking = false,
+                RequiresReservation = true,
+                HasOutdoorSeating = false,
+                FirstDateSuitabilityScore = 9.6,
+                GoogleRating = 4.5,
+                HeroImageUrl = "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=1200",
+                GoogleMapsUrl = "https://maps.google.com/?q=Pano+Sarap+Evi",
+                InstagramHandle = "@panosarapevi"
+            },
+            new Venue
+            {
+                Id = Guid.NewGuid(),
+                Name = "Wonderland Coffee & Bakery Küçükyalı",
+                District = "Maltepe",
+                Neighborhood = "Küçükyalı Sahil",
+                Address = "Yalı Mah. Rıhtım Cad. No:18, Küçükyalı, Maltepe",
+                Location = gf.CreatePoint(new Coordinate(29.1180, 40.9420)),
+                PriceLevel = PriceLevel.Moderate,
+                NoiseLevel = NoiseLevel.WhisperQuiet,
+                CompatibleConcepts = new() { DateConcept.CoffeeAndWalk, DateConcept.QuietAndIntimate },
+                VibeTags = new() { "Deniz Esintisi", "Özel Pastalar", "Sessiz Bahçe", "Butik", "Kahve" },
+                SeatingArrangement = "Küçükyalı sahilinde çiçekli bahçe masaları ve vintage koltuklar",
+                HasAlcohol = false,
+                HasValetParking = false,
+                RequiresReservation = false,
+                HasOutdoorSeating = true,
+                FirstDateSuitabilityScore = 9.5,
+                GoogleRating = 4.6,
+                HeroImageUrl = "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1200",
+                GoogleMapsUrl = "https://maps.google.com/?q=Wonderland+Coffee+Kucukyali",
+                InstagramHandle = "@wonderlandbakery"
+            },
+            new Venue
+            {
+                Id = Guid.NewGuid(),
+                Name = "Dragonera Cafe & Bistro Dragos",
+                District = "Kartal",
+                Neighborhood = "Dragos",
+                Address = "Kordonboyu Mah. Dragos Sahil Yolu No:12, Kartal",
+                Location = gf.CreatePoint(new Coordinate(29.1850, 40.8950)),
+                PriceLevel = PriceLevel.Moderate,
+                NoiseLevel = NoiseLevel.WhisperQuiet,
+                CompatibleConcepts = new() { DateConcept.CoffeeAndWalk, DateConcept.RomanticAndChic },
+                VibeTags = new() { "Dragos Tepesi", "Adalar Panoraması", "Yeşillikler İçinde", "Sahil Kenarı", "Butik" },
+                SeatingArrangement = "Çam ağaçları altında ada manzaralı ahşap masalar",
+                HasAlcohol = true,
+                HasValetParking = true,
+                RequiresReservation = false,
+                HasOutdoorSeating = true,
+                FirstDateSuitabilityScore = 9.6,
+                GoogleRating = 4.6,
+                HeroImageUrl = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1200",
+                GoogleMapsUrl = "https://maps.google.com/?q=Dragos+Sahil+Cafe+Kartal",
+                InstagramHandle = "@dragonerabistro"
+            },
+            new Venue
+            {
+                Id = Guid.NewGuid(),
+                Name = "The Populist Bomontiada",
+                District = "Şişli",
+                Neighborhood = "Bomonti",
+                Address = "Merkez Mah. Birahane Sok. Tarihi Bomonti Bira Fabrikası No:1, Şişli",
+                Location = gf.CreatePoint(new Coordinate(28.9805, 41.0570)),
+                PriceLevel = PriceLevel.Moderate,
+                NoiseLevel = NoiseLevel.LivelyLoud,
+                CompatibleConcepts = new() { DateConcept.CocktailAndVibe, DateConcept.FunAndCasual },
+                VibeTags = new() { "Tarihi Fabrika", "Craft İçecekler", "Açık Avlu", "Canlı & Enerjik", "Kokteyl Bar" },
+                SeatingArrangement = "Geniş açık hava avlusu ve endüstriyel şık yüksek masalar",
+                HasAlcohol = true,
+                HasValetParking = true,
+                RequiresReservation = false,
+                HasOutdoorSeating = true,
+                FirstDateSuitabilityScore = 9.5,
+                GoogleRating = 4.6,
+                HeroImageUrl = "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?q=80&w=1200",
+                GoogleMapsUrl = "https://maps.google.com/?q=The+Populist+Bomontiada",
+                InstagramHandle = "@thepopulisttr"
+            },
+            new Venue
+            {
+                Id = Guid.NewGuid(),
+                Name = "Apartiman Yeniköy",
+                District = "Sarıyer",
+                Neighborhood = "Yeniköy",
+                Address = "Yeniköy Mah. Köybaşı Cad. No:153, Sarıyer",
+                Location = gf.CreatePoint(new Coordinate(29.0580, 41.1210)),
+                PriceLevel = PriceLevel.Moderate,
+                NoiseLevel = NoiseLevel.WhisperQuiet,
+                CompatibleConcepts = new() { DateConcept.RomanticAndChic, DateConcept.QuietAndIntimate },
+                VibeTags = new() { "Tarladan Masaya", "Ev Sıcaklığı", "Sessiz Bahçe", "Zarif", "Şık Restoran" },
+                SeatingArrangement = "Huzurlu arka bahçe ve samimi ahşap masalar",
+                HasAlcohol = true,
+                HasValetParking = true,
+                RequiresReservation = true,
+                HasOutdoorSeating = true,
+                FirstDateSuitabilityScore = 9.7,
+                GoogleRating = 4.7,
+                HeroImageUrl = "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1200",
+                GoogleMapsUrl = "https://maps.google.com/?q=Apartiman+Yeniköy",
+                InstagramHandle = "@apartimanyenikoy"
+            },
+            new Venue
+            {
+                Id = Guid.NewGuid(),
+                Name = "Nail Kitabevi & Cafe Kuzguncuk",
+                District = "Üsküdar",
+                Neighborhood = "Kuzguncuk",
+                Address = "Kuzguncuk Mah. İcadiye Cad. No:32, Üsküdar",
+                Location = gf.CreatePoint(new Coordinate(29.0295, 41.0360)),
+                PriceLevel = PriceLevel.Budget,
+                NoiseLevel = NoiseLevel.WhisperQuiet,
+                CompatibleConcepts = new() { DateConcept.CoffeeAndWalk, DateConcept.QuietAndIntimate },
+                VibeTags = new() { "Tarihi Kuzguncuk", "Kitap & Kahve", "Cumbalı Konak", "Sakin & Samimi" },
+                SeatingArrangement = "Cumbalı tarihi ahşap binada kitaplar arasında masalar",
+                HasAlcohol = false,
+                HasValetParking = false,
+                RequiresReservation = false,
+                HasOutdoorSeating = true,
+                FirstDateSuitabilityScore = 9.6,
+                GoogleRating = 4.7,
+                HeroImageUrl = "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=1200",
+                GoogleMapsUrl = "https://maps.google.com/?q=Nail+Kitabevi+Kuzguncuk",
+                InstagramHandle = "@nail_kitabevi"
+            },
+            new Venue
+            {
+                Id = Guid.NewGuid(),
+                Name = "West Istanbul Marina Yacht Club Cafe",
+                District = "Beylikdüzü",
+                Neighborhood = "Yakuplu / West Marina",
+                Address = "Marmara Mah. Ulusum Cad. No:28 West Istanbul Marina, Beylikdüzü",
+                Location = gf.CreatePoint(new Coordinate(28.6650, 40.9680)),
+                PriceLevel = PriceLevel.Moderate,
+                NoiseLevel = NoiseLevel.ModerateMusic,
+                CompatibleConcepts = new() { DateConcept.RomanticAndChic, DateConcept.CocktailAndVibe },
+                VibeTags = new() { "Yat Limanı", "Deniz Esintisi", "Modern & Ferah", "Sahil Kenarı", "Şık Restoran" },
+                SeatingArrangement = "Deniz rıhtımında lüks yatlara bakan açık hava masaları",
+                HasAlcohol = true,
+                HasValetParking = true,
+                RequiresReservation = true,
+                HasOutdoorSeating = true,
+                FirstDateSuitabilityScore = 9.6,
+                GoogleRating = 4.6,
+                HeroImageUrl = "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=1200",
+                GoogleMapsUrl = "https://maps.google.com/?q=West+Istanbul+Marina+Beylikduzu",
+                InstagramHandle = "@westistanbulmarina"
+            },
+            new Venue
+            {
+                Id = Guid.NewGuid(),
+                Name = "The North Shield Bahçeşehir Gölet",
+                District = "Başakşehir",
+                Neighborhood = "Bahçeşehir Gölet Parkı",
+                Address = "Bahçeşehir 1. Kısım Mah. Doğa Parkı Cad. Gölet İçi No:8, Başakşehir",
+                Location = gf.CreatePoint(new Coordinate(28.6980, 41.0720)),
+                PriceLevel = PriceLevel.Moderate,
+                NoiseLevel = NoiseLevel.ModerateMusic,
+                CompatibleConcepts = new() { DateConcept.CocktailAndVibe, DateConcept.FunAndCasual },
+                VibeTags = new() { "Gölet Manzarası", "Ahşap Pub Sıcaklığı", "Geniş Bahçe", "Kokteyl Bar" },
+                SeatingArrangement = "Gölet sularına bakan ahşap veranda masaları ve deri koltuklar",
+                HasAlcohol = true,
+                HasValetParking = true,
+                RequiresReservation = false,
+                HasOutdoorSeating = true,
+                FirstDateSuitabilityScore = 9.4,
+                GoogleRating = 4.5,
+                HeroImageUrl = "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=1200",
+                GoogleMapsUrl = "https://maps.google.com/?q=North+Shield+Bahcesehir+Golet",
+                InstagramHandle = "@thenorthshield"
+            }
+        };
+
+        if (coveredDistricts != null && coveredDistricts.Any())
+        {
+            var lowerList = coveredDistricts.Select(d => d.ToLower().Trim()).ToList();
+            var matched = all.Where(v => lowerList.Contains(v.District.ToLower().Trim())).ToList();
+            if (matched.Any()) return matched;
+        }
+        else if (!string.IsNullOrWhiteSpace(district) && 
+            !district.Equals("Tüm İstanbul", StringComparison.OrdinalIgnoreCase) && 
+            !district.Equals("Hepsi", StringComparison.OrdinalIgnoreCase))
+        {
+            var matched = all.Where(v => v.District.Equals(district.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+            if (matched.Any()) return matched;
+        }
+
+        return all;
+    }
 }
+

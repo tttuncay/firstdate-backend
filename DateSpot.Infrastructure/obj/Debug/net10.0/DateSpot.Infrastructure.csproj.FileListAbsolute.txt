@@ -38,3 +38,4 @@ C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Infrastructure\obj\De
 C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Infrastructure\obj\Debug\net10.0\DateSpot.Infrastructure.pdb
 C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Infrastructure\obj\Debug\net10.0\DateSpot.Infrastructure.genruntimeconfig.cache
 C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Infrastructure\obj\Debug\net10.0\ref\DateSpot.Infrastructure.dll
+C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Infrastructure\obj\Debug\net10.0\DateSpot.Infrastructure.sourcelink.json

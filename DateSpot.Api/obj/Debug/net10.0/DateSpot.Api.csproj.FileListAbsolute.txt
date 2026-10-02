@@ -266,3 +266,4 @@ C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Api\obj\Debug\net10.0
 C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Api\obj\Debug\net10.0\DateSpot.Api.pdb
 C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Api\obj\Debug\net10.0\DateSpot.Api.genruntimeconfig.cache
 C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.Api\obj\Debug\net10.0\ref\DateSpot.Api.dll
+C:\Users\tunca\Desktop\firstdatemekanoner\backend\DateSpot.API\obj\Debug\net10.0\DateSpot.Api.sourcelink.json

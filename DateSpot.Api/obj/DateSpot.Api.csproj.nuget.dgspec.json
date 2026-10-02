@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.Api\\DateSpot.Api.csproj": {}
+    "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.API\\DateSpot.Api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.Api\\DateSpot.Api.csproj": {
+    "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.API\\DateSpot.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.Api\\DateSpot.Api.csproj",
+        "projectUniqueName": "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.API\\DateSpot.Api.csproj",
         "projectName": "DateSpot.Api",
-        "projectPath": "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.Api\\DateSpot.Api.csproj",
+        "projectPath": "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.API\\DateSpot.Api.csproj",
         "packagesPath": "C:\\Users\\tunca\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.Api\\obj\\",
+        "outputPath": "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

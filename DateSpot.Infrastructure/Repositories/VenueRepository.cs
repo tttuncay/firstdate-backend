@@ -29,59 +29,83 @@ public class VenueRepository : IVenueRepository
         bool? requiresParking,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.Venues.AsNoTracking().AsQueryable();
-
-        // 1. Çoklu Kapsanan İlçeler Filtresi
-        if (coveredDistricts != null && coveredDistricts.Any())
+        try
         {
-            var lowerDistricts = coveredDistricts.Select(d => d.ToLower()).ToList();
-            query = query.Where(v => lowerDistricts.Contains(v.District.ToLower()));
+            var query = _context.Venues.AsNoTracking().AsQueryable();
+
+            // 1. Çoklu Kapsanan İlçeler Filtresi
+            if (coveredDistricts != null && coveredDistricts.Any())
+            {
+                var lowerDistricts = coveredDistricts.Select(d => d.ToLower()).ToList();
+                query = query.Where(v => lowerDistricts.Contains(v.District.ToLower()));
+            }
+            else if (!string.IsNullOrWhiteSpace(district) && 
+                !district.Equals("Tüm İstanbul", StringComparison.OrdinalIgnoreCase) &&
+                !district.Equals("Hepsi", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(v => v.District.ToLower() == district.ToLower());
+            }
+
+            // 2. PostGIS Konum / Yarıçap Filtresi (Kullanıcı koordinat vermişse)
+            if (userLat.HasValue && userLng.HasValue)
+            {
+                var userPoint = _geometryFactory.CreatePoint(new Coordinate(userLng.Value, userLat.Value));
+                // Yaklaşık derece cinsinden mesafe (1 derece ~ 111 km)
+                double radiusInDegrees = radiusInKm / 111.0;
+                query = query.Where(v => v.Location.IsWithinDistance(userPoint, radiusInDegrees));
+            }
+
+            // 3. Bütçe Filtresi
+            if (maxPriceLevel.HasValue)
+            {
+                query = query.Where(v => v.PriceLevel <= maxPriceLevel.Value);
+            }
+
+            // 4. Alkol Filtresi
+            if (requiresAlcohol.HasValue && requiresAlcohol.Value)
+            {
+                query = query.Where(v => v.HasAlcohol);
+            }
+
+            // 5. Otopark Filtresi
+            if (requiresParking.HasValue && requiresParking.Value)
+            {
+                query = query.Where(v => v.HasValetParking);
+            }
+
+            var result = await query.Take(40).ToListAsync(cancellationToken);
+            if (result.Any()) return result;
         }
-        else if (!string.IsNullOrWhiteSpace(district) && 
-            !district.Equals("Tüm İstanbul", StringComparison.OrdinalIgnoreCase) &&
-            !district.Equals("Hepsi", StringComparison.OrdinalIgnoreCase))
+        catch (Exception ex)
         {
-            query = query.Where(v => v.District.ToLower() == district.ToLower());
+            Console.WriteLine($"[VenueRepository] DB query failed, falling back to static pool: {ex.Message}");
         }
 
-        // 2. PostGIS Konum / Yarıçap Filtresi (Kullanıcı koordinat vermişse)
-        if (userLat.HasValue && userLng.HasValue)
-        {
-            var userPoint = _geometryFactory.CreatePoint(new Coordinate(userLng.Value, userLat.Value));
-            // Yaklaşık derece cinsinden mesafe (1 derece ~ 111 km)
-            double radiusInDegrees = radiusInKm / 111.0;
-            query = query.Where(v => v.Location.IsWithinDistance(userPoint, radiusInDegrees));
-        }
-
-        // 3. Bütçe Filtresi
-        if (maxPriceLevel.HasValue)
-        {
-            query = query.Where(v => v.PriceLevel <= maxPriceLevel.Value);
-        }
-
-        // 4. Alkol Filtresi
-        if (requiresAlcohol.HasValue && requiresAlcohol.Value)
-        {
-            query = query.Where(v => v.HasAlcohol);
-        }
-
-        // 5. Otopark Filtresi
-        if (requiresParking.HasValue && requiresParking.Value)
-        {
-            query = query.Where(v => v.HasValetParking);
-        }
-
-        return await query.Take(40).ToListAsync(cancellationToken);
+        return DbInitializer.GetStaticSeedVenues(district, coveredDistricts);
     }
 
     public async Task<List<Venue>> GetAllVenuesAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Venues.AsNoTracking().Take(50).ToListAsync(cancellationToken);
+        try
+        {
+            return await _context.Venues.AsNoTracking().Take(50).ToListAsync(cancellationToken);
+        }
+        catch
+        {
+            return DbInitializer.GetStaticSeedVenues(null, null);
+        }
     }
 
     public async Task<Venue?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Venues.FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+        try
+        {
+            return await _context.Venues.FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+        }
+        catch
+        {
+            return DbInitializer.GetStaticSeedVenues(null, null).FirstOrDefault(v => v.Id == id);
+        }
     }
 
     public async Task AddRangeAsync(IEnumerable<Venue> venues, CancellationToken cancellationToken = default)
@@ -92,6 +116,13 @@ public class VenueRepository : IVenueRepository
 
     public async Task<int> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Venues.CountAsync(cancellationToken);
+        try
+        {
+            return await _context.Venues.CountAsync(cancellationToken);
+        }
+        catch
+        {
+            return 0;
+        }
     }
 }

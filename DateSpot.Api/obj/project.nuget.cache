@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "It3/6sOsIwM=",
+  "dgSpecHash": "4nsXm4cYlU4=",
   "success": true,
-  "projectFilePath": "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.Api\\DateSpot.Api.csproj",
+  "projectFilePath": "C:\\Users\\tunca\\Desktop\\firstdatemekanoner\\backend\\DateSpot.API\\DateSpot.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\tunca\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\tunca\\.nuget\\packages\\microsoft.build.framework\\18.0.2\\microsoft.build.framework.18.0.2.nupkg.sha512",
