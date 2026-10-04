@@ -41,10 +41,23 @@ public class RecommendationService : IRecommendationService
             requiresParking: request.ParkingRequired,
             cancellationToken: cancellationToken);
 
-        if (!candidates.Any())
+        if (candidates == null || !candidates.Any())
         {
-            // Fallback: Eğer spesifik filtrede mekan bulunamazsa genel İstanbul havuzundan getir
-            candidates = await _venueRepository.GetAllVenuesAsync(cancellationToken);
+            var allVenues = await _venueRepository.GetAllVenuesAsync(cancellationToken);
+            if (allVenues.Any())
+            {
+                candidates = allVenues;
+            }
+            else
+            {
+                return new RecommendationResponseDto
+                {
+                    Success = false,
+                    TotalCandidatesAnalyzed = 0,
+                    RecommendedVenues = new List<VenueRecommendationDto>(),
+                    Message = "Maalesef veritabanımızda uygun mekan eklenmemiş."
+                };
+            }
         }
 
         // 2. Ağırlıklı Puanlama Algoritması

@@ -74,14 +74,13 @@ public class VenueRepository : IVenueRepository
             }
 
             var result = await query.Take(40).ToListAsync(cancellationToken);
-            if (result.Any()) return result;
+            return result;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[VenueRepository] DB query failed, falling back to static pool: {ex.Message}");
+            Console.WriteLine($"[VenueRepository] DB query failed: {ex.Message}");
+            return new List<Venue>();
         }
-
-        return DbInitializer.GetStaticSeedVenues(district, coveredDistricts);
     }
 
     public async Task<List<Venue>> GetAllVenuesAsync(CancellationToken cancellationToken = default)
@@ -90,9 +89,10 @@ public class VenueRepository : IVenueRepository
         {
             return await _context.Venues.AsNoTracking().Take(50).ToListAsync(cancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
-            return DbInitializer.GetStaticSeedVenues(null, null);
+            Console.WriteLine($"[VenueRepository] GetAllVenuesAsync DB query failed: {ex.Message}");
+            return new List<Venue>();
         }
     }
 
@@ -104,7 +104,7 @@ public class VenueRepository : IVenueRepository
         }
         catch
         {
-            return DbInitializer.GetStaticSeedVenues(null, null).FirstOrDefault(v => v.Id == id);
+            return null;
         }
     }
 
