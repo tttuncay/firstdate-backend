@@ -73,19 +73,56 @@ try
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<DateSpotDbContext>();
     
-    try
-    {
-        await dbContext.Database.ExecuteSqlRawAsync("CREATE EXTENSION IF NOT EXISTS postgis;");
-    }
-    catch { /* Zaten varsa devam et */ }
+    const string initSql = @"
+        CREATE EXTENSION IF NOT EXISTS postgis;
 
-    await dbContext.Database.EnsureCreatedAsync();
+        CREATE TABLE IF NOT EXISTS ""Districts"" (
+            ""Id"" SERIAL PRIMARY KEY,
+            ""Name"" VARCHAR(100) NOT NULL UNIQUE,
+            ""Side"" VARCHAR(50) NOT NULL,
+            ""CenterLocation"" geometry(Point, 4326),
+            ""PopularNeighborhoods"" TEXT NOT NULL DEFAULT '[]',
+            ""TotalVenuesCount"" INT NOT NULL DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS ""Venues"" (
+            ""Id"" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            ""Name"" VARCHAR(200) NOT NULL,
+            ""District"" VARCHAR(100) NOT NULL,
+            ""Neighborhood"" VARCHAR(100),
+            ""Address"" VARCHAR(500),
+            ""Location"" geometry(Point, 4326),
+            ""PriceLevel"" INT NOT NULL DEFAULT 0,
+            ""NoiseLevel"" INT NOT NULL DEFAULT 0,
+            ""CompatibleConcepts"" TEXT NOT NULL DEFAULT '[]',
+            ""VibeTags"" TEXT NOT NULL DEFAULT '[]',
+            ""SeatingArrangement"" TEXT,
+            ""HasAlcohol"" BOOLEAN NOT NULL DEFAULT FALSE,
+            ""HasValetParking"" BOOLEAN NOT NULL DEFAULT FALSE,
+            ""RequiresReservation"" BOOLEAN NOT NULL DEFAULT FALSE,
+            ""HasOutdoorSeating"" BOOLEAN NOT NULL DEFAULT FALSE,
+            ""FirstDateSuitabilityScore"" DOUBLE PRECISION NOT NULL DEFAULT 0,
+            ""GoogleRating"" DOUBLE PRECISION NOT NULL DEFAULT 0,
+            ""ReviewCount"" INT NOT NULL DEFAULT 0,
+            ""HeroImageUrl"" TEXT,
+            ""GalleryImages"" TEXT NOT NULL DEFAULT '[]',
+            ""GoogleMapsUrl"" TEXT,
+            ""InstagramHandle"" TEXT,
+            ""CreatedAt"" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+
+        CREATE INDEX IF NOT EXISTS ""IX_Venues_District"" ON ""Venues"" (""District"");
+        CREATE INDEX IF NOT EXISTS ""IX_Venues_PriceLevel"" ON ""Venues"" (""PriceLevel"");
+        CREATE INDEX IF NOT EXISTS ""IX_Venues_FirstDateSuitabilityScore"" ON ""Venues"" (""FirstDateSuitabilityScore"");
+    ";
+
+    await dbContext.Database.ExecuteSqlRawAsync(initSql);
     await DbInitializer.SeedVenuesAsync(dbContext);
-    Console.WriteLine("✅ İstanbul TamYeri mekanları ve tüm 39 ilçe Supabase veritabanına başarıyla yüklendi!");
+    Console.WriteLine("✅ İstanbul TamYeri veritabanı tabloları ve ilçeleri Supabase'de başarıyla hazırlandı!");
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"⚠️ Veritabanı bağlantı/tohumlama detayı: {ex.Message}");
+    Console.WriteLine($"⚠️ Veritabanı bağlantı/tablo oluşturma detayı: {ex.Message}");
 }
 
 app.Run();

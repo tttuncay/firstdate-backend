@@ -9,8 +9,6 @@ public static class DbInitializer
 {
     public static async Task SeedVenuesAsync(DateSpotDbContext context)
     {
-        await context.Database.EnsureCreatedAsync();
-
         var gf = new GeometryFactory(new PrecisionModel(), 4326);
 
         // 1. İstanbul'un Tüm 39 İlçesini Tohumla (Seed All 39 Districts)
