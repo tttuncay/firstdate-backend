@@ -19,7 +19,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "First Date Mekan Önerici API", Version = "v1" });
+    c.SwaggerDoc("v1", new() { Title = "TamYeri: Mekan Rehberi API", Version = "v1" });
 });
 
 // CORS Yapılandırması (Flutter mobil ve web için)
@@ -59,7 +59,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "DateSpot AI API v1");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TamYeri API v1");
     c.RoutePrefix = string.Empty; // Doğrudan kök dizinde Swagger açılsın
 });
 
@@ -72,13 +72,20 @@ try
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<DateSpotDbContext>();
+    
+    try
+    {
+        await dbContext.Database.ExecuteSqlRawAsync("CREATE EXTENSION IF NOT EXISTS postgis;");
+    }
+    catch { /* Zaten varsa devam et */ }
+
     await dbContext.Database.EnsureCreatedAsync();
     await DbInitializer.SeedVenuesAsync(dbContext);
-    Console.WriteLine("✅ İstanbul First Date mekanları veritabanına başarıyla yüklendi.");
+    Console.WriteLine("✅ İstanbul TamYeri mekanları ve tüm 39 ilçe Supabase veritabanına başarıyla yüklendi!");
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"⚠️ Veritabanı tohumlama atlandı / bağlantı hazır değil: {ex.Message}");
+    Console.WriteLine($"⚠️ Veritabanı bağlantı/tohumlama detayı: {ex.Message}");
 }
 
 app.Run();

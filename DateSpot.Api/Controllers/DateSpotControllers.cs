@@ -88,6 +88,97 @@ public class VenuesController : ControllerBase
 
         return Ok(venue);
     }
+
+    /// <summary>
+    /// Veritabanına manuel yeni bir mekan ekler (Swagger veya API üzerinden).
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<object>> CreateVenue(
+        [FromBody] CreateVenueDto dto,
+        CancellationToken cancellationToken)
+    {
+        var gf = new NetTopologySuite.Geometries.GeometryFactory(new NetTopologySuite.Geometries.PrecisionModel(), 4326);
+
+        var venue = new DateSpot.Core.Entities.Venue
+        {
+            Name = dto.Name,
+            District = dto.District,
+            Neighborhood = dto.Neighborhood,
+            Address = dto.Address,
+            Location = gf.CreatePoint(new NetTopologySuite.Geometries.Coordinate(dto.Longitude, dto.Latitude)),
+            PriceLevel = dto.PriceLevel,
+            NoiseLevel = dto.NoiseLevel,
+            CompatibleConcepts = dto.CompatibleConcepts,
+            VibeTags = dto.VibeTags,
+            SeatingArrangement = dto.SeatingArrangement,
+            HasAlcohol = dto.HasAlcohol,
+            HasValetParking = dto.HasValetParking,
+            RequiresReservation = dto.RequiresReservation,
+            HasOutdoorSeating = dto.HasOutdoorSeating,
+            FirstDateSuitabilityScore = dto.FirstDateSuitabilityScore,
+            GoogleRating = dto.GoogleRating,
+            ReviewCount = dto.ReviewCount,
+            HeroImageUrl = dto.HeroImageUrl,
+            GalleryImages = dto.GalleryImages,
+            GoogleMapsUrl = dto.GoogleMapsUrl,
+            InstagramHandle = dto.InstagramHandle
+        };
+
+        await _dbContext.Venues.AddAsync(venue, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return CreatedAtAction(nameof(GetById), new { id = venue.Id }, new 
+        { 
+            id = venue.Id, 
+            name = venue.Name, 
+            message = "Mekan başarıyla veritabanına eklendi." 
+        });
+    }
+
+    /// <summary>
+    /// Birden fazla mekanı topluca (bulk) veritabanına ekler.
+    /// </summary>
+    [HttpPost("bulk")]
+    public async Task<ActionResult<object>> CreateVenuesBulk(
+        [FromBody] List<CreateVenueDto> dtoList,
+        CancellationToken cancellationToken)
+    {
+        var gf = new NetTopologySuite.Geometries.GeometryFactory(new NetTopologySuite.Geometries.PrecisionModel(), 4326);
+
+        var venueList = dtoList.Select(dto => new DateSpot.Core.Entities.Venue
+        {
+            Name = dto.Name,
+            District = dto.District,
+            Neighborhood = dto.Neighborhood,
+            Address = dto.Address,
+            Location = gf.CreatePoint(new NetTopologySuite.Geometries.Coordinate(dto.Longitude, dto.Latitude)),
+            PriceLevel = dto.PriceLevel,
+            NoiseLevel = dto.NoiseLevel,
+            CompatibleConcepts = dto.CompatibleConcepts,
+            VibeTags = dto.VibeTags,
+            SeatingArrangement = dto.SeatingArrangement,
+            HasAlcohol = dto.HasAlcohol,
+            HasValetParking = dto.HasValetParking,
+            RequiresReservation = dto.RequiresReservation,
+            HasOutdoorSeating = dto.HasOutdoorSeating,
+            FirstDateSuitabilityScore = dto.FirstDateSuitabilityScore,
+            GoogleRating = dto.GoogleRating,
+            ReviewCount = dto.ReviewCount,
+            HeroImageUrl = dto.HeroImageUrl,
+            GalleryImages = dto.GalleryImages,
+            GoogleMapsUrl = dto.GoogleMapsUrl,
+            InstagramHandle = dto.InstagramHandle
+        }).ToList();
+
+        await _dbContext.Venues.AddRangeAsync(venueList, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok(new 
+        { 
+            count = venueList.Count, 
+            message = $"{venueList.Count} mekan başarıyla veritabanına eklendi." 
+        });
+    }
 }
 
 [ApiController]

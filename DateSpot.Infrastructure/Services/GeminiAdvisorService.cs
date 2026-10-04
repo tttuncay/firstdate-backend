@@ -29,6 +29,7 @@ public class GeminiAdvisorService : IGeminiAdvisorService
         List<Venue> topVenues,
         DateConcept requestedConcept,
         string district,
+        string occasion = "",
         CancellationToken cancellationToken = default)
     {
         var results = new Dictionary<Guid, DateSpotAdviceResult>();
@@ -46,14 +47,18 @@ public class GeminiAdvisorService : IGeminiAdvisorService
 
         try
         {
+            string occasionText = !string.IsNullOrWhiteSpace(occasion) 
+                ? occasion 
+                : "Özel Buluşma & Mekan Keşfi";
+
             string conceptName = requestedConcept switch
             {
-                DateConcept.QuietAndIntimate => "Sessiz, Samimi ve Derin Sohbet",
+                DateConcept.QuietAndIntimate => "Sessiz, Samimi ve Rahat Ortam",
                 DateConcept.RomanticAndChic => "Romantik, Loş Işık ve Şık",
                 DateConcept.CocktailAndVibe => "Kaliteli Kokteyl ve Sosyal Atmosfer",
-                DateConcept.CoffeeAndWalk => "Kahve, Tatlı ve Rahat Yürüyüş",
+                DateConcept.CoffeeAndWalk => "Kahve, Tatlı ve Rahat Oturum",
                 DateConcept.FunAndCasual => "Eğlenceli, Rahat ve Dinamik",
-                _ => "İlk Buluşma"
+                _ => "Mekan Buluşması"
             };
 
             var venuesSummary = topVenues.Select(v => new
@@ -69,12 +74,12 @@ public class GeminiAdvisorService : IGeminiAdvisorService
             });
 
             string prompt = $@"
-Sen uzman bir flört koçu ve mekan küratörüsün. Kullanıcı İstanbul ({district}) bölgesinde '{conceptName}' konseptinde bir ilk buluşma (first date) planlıyor.
+Sen uzman bir şehir rehberi ve mekan küratörüsün. Kullanıcı İstanbul ({district}) bölgesinde '{occasionText}' amacı ve '{conceptName}' tarzında bir mekan arıyor.
 Aşağıda seçilen 3 mekan için her biri adına Türkçe olarak şu 4 alanı doldur:
-1. WhyThisSpot: İlk buluşmanın gerginliğini nasıl alacağını ve bu mekanı neden seçtiğini anlatan etkileyici 2-3 cümle.
-2. IcebreakerTopic: Bu mekanın ambiyansına ve konseptine uygun masada konuşulabilecek zekice bir buzkıran sohbet konusu.
-3. TableTactics: Masada oturma düzeni veya ortam taktiği (Örn: 'Karşılıklı yerine 90 derece açıyla oturun', 'Bahçe tarafındaki köşeyi isteyin').
-4. IdealOrderRecommendation: İlk buluşmada sipariş edilmesi en risksiz ve havalı yiyecek/içecek önerisi.
+1. WhyThisSpot: Bu mekanın '{occasionText}' için neden en mükemmel tercih olduğunu anlatan etkileyici ve ikna edici 2-3 cümle.
+2. IcebreakerTopic: Bu mekanın ambiyansına ve '{occasionText}' amacına uygun masada açılabilecek zekice/keyifli bir sohbet konusu veya ortam tüyosu.
+3. TableTactics: Masada oturma düzeni, rezerve edilecek en iyi köşe veya ortam taktiği (Örn: 'Bahçe tarafındaki köşeyi isteyin', 'Toplantı/sohbet için arka sessiz masayı seçin').
+4. IdealOrderRecommendation: Bu mekanda sipariş edilmesi en tavsiye edilen, risksiz ve popüler yiyecek/içecek önerisi.
 
 Mekanlar:
 {JsonSerializer.Serialize(venuesSummary)}

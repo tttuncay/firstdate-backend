@@ -28,6 +28,7 @@ public interface IGeminiAdvisorService
         List<Venue> topVenues,
         DateConcept requestedConcept,
         string district,
+        string occasion = "",
         CancellationToken cancellationToken = default);
 }
 

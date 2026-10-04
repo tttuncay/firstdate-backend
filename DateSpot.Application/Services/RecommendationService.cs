@@ -71,11 +71,12 @@ public class RecommendationService : IRecommendationService
 
         var topVenues = scoredVenues.Select(x => x.Venue).ToList();
 
-        // 3. Gemini AI ile "Neden Burası?", "Buzkıran Taktikleri" ve "Masa Tavsiyeleri" üret
+        // 3. Gemini AI ile mekana ve etkinlik amacına özel analizler üret
         var aiAdvices = await _geminiAdvisorService.GenerateDateAdvicesAsync(
             topVenues,
             request.Concept,
             request.District,
+            request.Occasion,
             cancellationToken);
 
         // 4. Sonuç DTO'sunu derle

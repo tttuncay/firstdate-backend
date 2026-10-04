@@ -10,7 +10,8 @@ public class RecommendationRequestDto
     public double? Longitude { get; set; }
     public double RadiusInKm { get; set; } = 10.0;
     public DateConcept Concept { get; set; } = DateConcept.RomanticAndChic;
-
+    public string Occasion { get; set; } = string.Empty; // "İlk Buluşma & Romantik", "İş Buluşması & Çalışma", "Kutlama & Doğum Günü", "Arkadaşlarla Muhabbet", "Tek Başına Kafa Dinleme", "Aile Yemeği"
+    public string EventType { get; set; } = string.Empty;
     public string VenueType { get; set; } = string.Empty; // "Butik & 3. Nesil Kahveci", "Klasik Kahve Zinciri", "Sahil Kenarı", "Kokteyl Bar & Pub", "Şarap Evi & Romantik Mahzen", "Şık Restoran & Akşam Yemeği"
     public int? NoisePreference { get; set; } // 1: Sakin, 2: Dengeli, 3: Canlı
 
@@ -22,6 +23,8 @@ public class RecommendationRequestDto
     public PriceLevel? MaxPriceLevel { get; set; } = PriceLevel.Moderate;
     public bool? AlcoholRequired { get; set; }
     public bool? ParkingRequired { get; set; }
+    public bool? ReservationPreferred { get; set; }
+    public string GroupSize { get; set; } = string.Empty; // "1-2 Kişi", "3-5 Kişi", "6+ Kişi"
     public string? AppUserId { get; set; } // RevenueCat subscriber ID
 }
 
@@ -70,4 +73,30 @@ public class RecommendationResponseDto
     public string Message { get; set; } = string.Empty;
     public int TotalCandidatesAnalyzed { get; set; }
     public List<VenueRecommendationDto> RecommendedVenues { get; set; } = new();
+}
+
+public class CreateVenueDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string District { get; set; } = string.Empty;
+    public string Neighborhood { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public PriceLevel PriceLevel { get; set; } = PriceLevel.Moderate;
+    public NoiseLevel NoiseLevel { get; set; } = NoiseLevel.ModerateMusic;
+    public List<DateConcept> CompatibleConcepts { get; set; } = new();
+    public List<string> VibeTags { get; set; } = new();
+    public string SeatingArrangement { get; set; } = string.Empty;
+    public bool HasAlcohol { get; set; }
+    public bool HasValetParking { get; set; }
+    public bool RequiresReservation { get; set; }
+    public bool HasOutdoorSeating { get; set; }
+    public double FirstDateSuitabilityScore { get; set; } = 9.0;
+    public double GoogleRating { get; set; } = 4.5;
+    public int ReviewCount { get; set; } = 100;
+    public string HeroImageUrl { get; set; } = string.Empty;
+    public List<string> GalleryImages { get; set; } = new();
+    public string GoogleMapsUrl { get; set; } = string.Empty;
+    public string InstagramHandle { get; set; } = string.Empty;
 }
