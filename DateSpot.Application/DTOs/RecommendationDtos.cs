@@ -25,12 +25,25 @@ public class RecommendationRequestDto
     public string SeatingPrivacy { get; set; } = string.Empty;
     public string LightingStyle { get; set; } = string.Empty;
 
+    public string DateTiming { get; set; } = string.Empty; // "Kahve & Tatlı", "Serpme Kahvaltı & Brunch", "İçecek & Atıştırmalık / Meze", "Doyurucu Ana Yemek"
     public PriceLevel? MaxPriceLevel { get; set; } = PriceLevel.Moderate;
     public bool? AlcoholRequired { get; set; }
     public bool? ParkingRequired { get; set; }
+    public bool? OutdoorRequired { get; set; }
     public bool? ReservationPreferred { get; set; }
     public string GroupSize { get; set; } = string.Empty; // "1-2 Kişi", "3-5 Kişi", "6+ Kişi"
+    public string Prompt { get; set; } = string.Empty; // Kullanıcının yapay zekaya serbest yazdığı hayalindeki mekan metni
+    public string UserCustomPrompt { get => Prompt; set => Prompt = value; } // Geriye dönük uyumluluk
     public string? AppUserId { get; set; } // RevenueCat subscriber ID
+}
+
+public class MatchBreakdownDto
+{
+    public double OccasionScore { get; set; } // 0 - 100% (Buluşma Amacı / Occasion Uyumu)
+    public double VibeScore { get; set; }     // 0 - 100% (Ambiyans & Müzik & Işık)
+    public double SeatingScore { get; set; }  // 0 - 100% (Masa & Oturma Mahremiyeti)
+    public double BudgetScore { get; set; }   // 0 - 100% (Fiyat & Bütçe Uyumu)
+    public double OverallMatch { get; set; }  // 0 - 100% (Genel Uyum Skoru)
 }
 
 public class VenueRecommendationDto
@@ -47,11 +60,14 @@ public class VenueRecommendationDto
     public string Neighborhood { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PostalCode { get; set; } = string.Empty;
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public string Currency { get; set; } = "TRY";
     public string TimeZone { get; set; } = "Europe/Istanbul";
     public double GoogleRating { get; set; }
     public int ReviewCount { get; set; }
     public double MatchScore { get; set; } // 0 - 100%
+    public MatchBreakdownDto MatchBreakdown { get; set; } = new();
     public string HeroImageUrl { get; set; } = string.Empty;
     public List<string> GalleryImages { get; set; } = new();
     public string GoogleMapsUrl { get; set; } = string.Empty;
@@ -123,6 +139,8 @@ public class CreateVenueDto
     public string Neighborhood { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PostalCode { get; set; } = string.Empty;
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public string Currency { get; set; } = "TRY";
     public string TimeZone { get; set; } = "Europe/Istanbul";
     public double GoogleRating { get; set; } = 4.5;

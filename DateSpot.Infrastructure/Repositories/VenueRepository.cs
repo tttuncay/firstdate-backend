@@ -23,6 +23,10 @@ public class VenueRepository : IVenueRepository
         PriceLevel? maxPriceLevel,
         bool? requiresAlcohol,
         bool? requiresParking,
+        bool? requiresOutdoor = null,
+        string? occasion = null,
+        string? venueType = null,
+        int candidateLimit = 150,
         CancellationToken cancellationToken = default)
     {
         try
@@ -81,7 +85,51 @@ public class VenueRepository : IVenueRepository
                 query = query.Where(v => v.HasValetParking);
             }
 
-            var result = await query.Take(40).ToListAsync(cancellationToken);
+            // 7. Açık Hava / Bahçe / Teras Filtresi
+            if (requiresOutdoor.HasValue && requiresOutdoor.Value)
+            {
+                query = query.Where(v => v.HasOutdoorSeating);
+            }
+
+            // 8. Huni 1. Aşama (Stage 1): Kalite ve Güven Odaklı SQL Sıralaması (ORDER BY + TOP N)
+            // Rastgele ilk 40'ı almak yerine, en yüksek puanlı ve en güvenilir aday havuzunu (150 mekan) çekiyoruz.
+            var result = await query
+                .OrderByDescending(v => v.GoogleRating)
+                .ThenByDescending(v => v.ReviewCount)
+                .Take(candidateLimit > 0 ? candidateLimit : 150)
+                .ToListAsync(cancellationToken);
+
+            // Eğer sıkı filtreler sonucu havuz çok küçük kalırsa (örn < 5), esnek arama yap
+            if (result.Count < 5 && (requiresParking == true || requiresOutdoor == true))
+            {
+                var relaxedQuery = _context.Venues.AsNoTracking().AsQueryable();
+                if (coveredDistricts != null && coveredDistricts.Any())
+                {
+                    var lowerDistricts = coveredDistricts.Select(d => d.ToLower()).ToList();
+                    relaxedQuery = relaxedQuery.Where(v => lowerDistricts.Contains(v.District.ToLower()));
+                }
+                else if (!string.IsNullOrWhiteSpace(district) && !district.StartsWith("Tüm"))
+                {
+                    relaxedQuery = relaxedQuery.Where(v => v.District.ToLower() == district.ToLower());
+                }
+
+                if (requiresAlcohol.HasValue && requiresAlcohol.Value)
+                {
+                    relaxedQuery = relaxedQuery.Where(v => v.HasAlcohol);
+                }
+
+                var relaxedResults = await relaxedQuery
+                    .OrderByDescending(v => v.GoogleRating)
+                    .ThenByDescending(v => v.ReviewCount)
+                    .Take(candidateLimit > 0 ? candidateLimit : 150)
+                    .ToListAsync(cancellationToken);
+
+                if (relaxedResults.Count > result.Count)
+                {
+                    result = relaxedResults;
+                }
+            }
+
             return result;
         }
         catch (Exception ex)

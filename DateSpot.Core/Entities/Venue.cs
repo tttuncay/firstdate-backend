@@ -20,6 +20,8 @@ public class Venue
     public string Neighborhood { get; set; } = string.Empty; // Kuzguncuk, SoHo, Mayfair, Le Marais, vb.
     public string Address { get; set; } = string.Empty;
     public string PostalCode { get; set; } = string.Empty;
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public string Currency { get; set; } = "TRY"; // TRY, USD, EUR, GBP, JPY
     public string TimeZone { get; set; } = "Europe/Istanbul"; // Europe/Istanbul, America/New_York, Europe/London
     public double GoogleRating { get; set; } = 4.5;
