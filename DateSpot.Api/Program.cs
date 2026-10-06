@@ -201,6 +201,29 @@ try
         UPDATE ""Venues"" SET ""CountryCode"" = 'TR' WHERE ""CountryCode"" IS NULL OR ""CountryCode"" = '';
         UPDATE ""Venues"" SET ""City"" = 'İstanbul' WHERE ""City"" IS NULL OR ""City"" = '';
 
+        -- İlçe & Adres Senkronizasyonu (Google Maps Açık Adresindeki gerçek ilçeyi District kolonuna ata)
+        DO $$
+        DECLARE
+            d text;
+            districts text[] := ARRAY[
+                'Adalar', 'Arnavutköy', 'Ataşehir', 'Avcılar', 'Bağcılar', 'Bahçelievler', 'Bakırköy', 
+                'Başakşehir', 'Bayrampaşa', 'Beşiktaş', 'Beykoz', 'Beylikdüzü', 'Beyoğlu', 'Büyükçekmece', 
+                'Çatalca', 'Çekmeköy', 'Esenler', 'Esenyurt', 'Eyüpsultan', 'Fatih', 'Gaziosmanpaşa', 
+                'Güngören', 'Kadıköy', 'Kağıthane', 'Kartal', 'Küçükçekmece', 'Maltepe', 'Pendik', 'Sancaktepe', 
+                'Sarıyer', 'Silivri', 'Sultanbeyli', 'Sultangazi', 'Şile', 'Şişli', 'Tuzla', 'Ümraniye', 'Üsküdar', 'Zeytinburnu'
+            ];
+        BEGIN
+            UPDATE ""Venues"" SET ""District"" = 'Eyüpsultan' WHERE ""District"" = 'Eyüp';
+
+            FOREACH d IN ARRAY districts
+            LOOP
+                UPDATE ""Venues""
+                SET ""District"" = d
+                WHERE (""Address"" ~* ('\m' || d || '\s*/\s*İstanbul') OR ""Address"" ~* ('\d{5}\s+' || d) OR ""Address"" ~* ('\m' || d || '\s*/\s*Istanbul'))
+                  AND ""District"" != d;
+            END LOOP;
+        END $$;
+
         UPDATE ""Venues"" v
         SET ""DistrictId"" = d.""Id""
         FROM ""Districts"" d
