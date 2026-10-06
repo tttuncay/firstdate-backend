@@ -24,6 +24,8 @@ public class VenueRepository : IVenueRepository
         bool? requiresAlcohol,
         bool? requiresParking,
         bool? requiresOutdoor = null,
+        bool? requiresPetFriendly = null,
+        string? timeSlot = null,
         string? occasion = null,
         string? venueType = null,
         string? customPrompt = null,
@@ -109,7 +111,13 @@ public class VenueRepository : IVenueRepository
                 query = query.Where(v => v.HasOutdoorSeating);
             }
 
-            // 8. Huni 1. Aşama (Stage 1): Havuzdan daha geniş aday kümesi çekip prompt uyumuna göre sıralama
+            // 8. Evcil Hayvan / Pet Friendly Filtresi
+            if (requiresPetFriendly.HasValue && requiresPetFriendly.Value)
+            {
+                query = query.Where(v => v.IsPetFriendly);
+            }
+
+            // 9. Huni 1. Aşama (Stage 1): Havuzdan daha geniş aday kümesi çekip prompt uyumuna göre sıralama
             int fetchPoolSize = candidateLimit > 0 ? Math.Max(candidateLimit * 10, 600) : 600;
             var pool = await query
                 .OrderByDescending(v => v.GoogleRating)

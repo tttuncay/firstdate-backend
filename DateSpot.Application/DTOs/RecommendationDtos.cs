@@ -25,11 +25,14 @@ public class RecommendationRequestDto
     public string SeatingPrivacy { get; set; } = string.Empty;
     public string LightingStyle { get; set; } = string.Empty;
 
-    public string DateTiming { get; set; } = string.Empty; // "Kahve & Tatlı", "Serpme Kahvaltı & Brunch", "İçecek & Atıştırmalık / Meze", "Doyurucu Ana Yemek"
+    public string DateTiming { get; set; } = string.Empty; // Geriye dönük uyumluluk
+    public string TimeSlot { get; set; } = string.Empty; // "🟢 Hemen Şimdi (Açık Olanlar)", "🌅 Sabah / Kahvaltı (08:00 - 12:00)", "☀️ Öğlen / Gündüz (12:00 - 17:30)", "🍽️ Akşam (18:00 - 23:00)", "🌙 Gece / Geç Saat (23:00+)", "⏰ Özel Saat"
+    public string? VisitHour { get; set; } // "21:30", "14:00" veya "now"
     public PriceLevel? MaxPriceLevel { get; set; } = PriceLevel.Moderate;
     public bool? AlcoholRequired { get; set; }
     public bool? ParkingRequired { get; set; }
     public bool? OutdoorRequired { get; set; }
+    public bool? PetFriendlyRequired { get; set; }
     public bool? ReservationPreferred { get; set; }
     public string GroupSize { get; set; } = string.Empty; // "1-2 Kişi", "3-5 Kişi", "6+ Kişi"
     public string Prompt { get; set; } = string.Empty; // Kullanıcının yapay zekaya serbest yazdığı hayalindeki mekan metni
@@ -74,6 +77,8 @@ public class VenueRecommendationDto
     public string InstagramHandle { get; set; } = string.Empty;
     public string? WebsiteUrl { get; set; }
     public string? PhoneNumber { get; set; }
+    public bool IsOpenNow { get; set; } = true;
+    public string OpeningHoursText { get; set; } = "09:00 - 23:30";
 
     // 2. Ambiyans & Duyusal Profil
     public NoiseLevel NoiseLevel { get; set; }

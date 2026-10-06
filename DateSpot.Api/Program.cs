@@ -193,6 +193,7 @@ try
         ALTER TABLE ""Venues"" ADD COLUMN IF NOT EXISTS ""SmokingArea"" VARCHAR(100) DEFAULT 'Bahçe';
         ALTER TABLE ""Venues"" ADD COLUMN IF NOT EXISTS ""SuitableOccasions"" TEXT NOT NULL DEFAULT '[]';
         ALTER TABLE ""Venues"" ADD COLUMN IF NOT EXISTS ""BestTimeToVisit"" VARCHAR(200) DEFAULT '';
+        ALTER TABLE ""Venues"" ADD COLUMN IF NOT EXISTS ""OpeningHours"" TEXT NOT NULL DEFAULT '{}';
         ALTER TABLE ""Venues"" ADD COLUMN IF NOT EXISTS ""RawMetadata"" TEXT NOT NULL DEFAULT '{}';
 
         -- Mevcut mekanların DistrictId, Country ve City alanlarını otomatik doldur

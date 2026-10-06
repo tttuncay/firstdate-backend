@@ -42,6 +42,8 @@ public class RecommendationService : IRecommendationService
             requiresAlcohol: request.AlcoholRequired,
             requiresParking: request.ParkingRequired,
             requiresOutdoor: request.OutdoorRequired,
+            requiresPetFriendly: request.PetFriendlyRequired,
+            timeSlot: !string.IsNullOrWhiteSpace(request.TimeSlot) ? request.TimeSlot : request.DateTiming,
             occasion: request.Occasion,
             venueType: request.VenueType,
             customPrompt: request.Prompt,
@@ -128,6 +130,8 @@ public class RecommendationService : IRecommendationService
                         InstagramHandle = v.InstagramHandle,
                         WebsiteUrl = v.WebsiteUrl,
                         PhoneNumber = v.PhoneNumber,
+                        IsOpenNow = true,
+                        OpeningHoursText = !string.IsNullOrWhiteSpace(v.BestTimeToVisit) ? v.BestTimeToVisit : "09:00 - 23:30",
 
                         NoiseLevel = v.NoiseLevel,
                         LightingStyle = v.LightingStyle,
@@ -220,6 +224,8 @@ public class RecommendationService : IRecommendationService
                 InstagramHandle = v.InstagramHandle,
                 WebsiteUrl = v.WebsiteUrl,
                 PhoneNumber = v.PhoneNumber,
+                IsOpenNow = true,
+                OpeningHoursText = !string.IsNullOrWhiteSpace(v.BestTimeToVisit) ? v.BestTimeToVisit : "09:00 - 23:30",
 
                 NoiseLevel = v.NoiseLevel,
                 LightingStyle = v.LightingStyle,

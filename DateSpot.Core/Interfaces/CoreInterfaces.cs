@@ -14,6 +14,8 @@ public interface IVenueRepository
         bool? requiresAlcohol,
         bool? requiresParking,
         bool? requiresOutdoor = null,
+        bool? requiresPetFriendly = null,
+        string? timeSlot = null,
         string? occasion = null,
         string? venueType = null,
         string? customPrompt = null,

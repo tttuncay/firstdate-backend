@@ -76,6 +76,7 @@ public class Venue
     public List<string> SuitableOccasions { get; set; } = new(); // ["İlk Buluşma & Romantik", "İş Toplantısı & Freelance", ...]
     public List<string> VibeTags { get; set; } = new(); // ["Mum Işığı", "Tarihi Doku", "Entelektüel", "Fotojenik"]
     public string BestTimeToVisit { get; set; } = string.Empty; // "Hafta içi 14:00 - 17:00 arası"
+    public string OpeningHours { get; set; } = "{}"; // Haftalık Çalışma Saatleri JSON (Örn: {"monday": "09:00-23:00", "saturday": "10:00-02:00"})
     public double FirstDateSuitabilityScore { get; set; } = 8.5;
     public string RawMetadata { get; set; } = "{}"; // JSON Deposu
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
