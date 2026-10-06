@@ -4,8 +4,13 @@ namespace DateSpot.Application.DTOs;
 
 public class RecommendationRequestDto
 {
-    public string District { get; set; } = string.Empty; // "Kadıköy", "Beşiktaş", "Beyoğlu", "Tüm İstanbul", vb.
-    public List<string> CoveredDistricts { get; set; } = new(); // Çemberin kapsadığı tüm ilçeler
+    public string Country { get; set; } = "Türkiye";
+    public string CountryCode { get; set; } = "TR";
+    public string City { get; set; } = "İstanbul";
+    public string Zone { get; set; } = string.Empty; // "Anadolu Yakası", "Avrupa Yakası", "Downtown", "West End", "Tümü"
+    public string Side { get => Zone; set => Zone = value; } // Geriye dönük uyumluluk köprüsü
+    public string District { get; set; } = string.Empty; // "Kadıköy", "Beşiktaş", "Üsküdar", "Manhattan", vb.
+    public List<string> CoveredDistricts { get; set; } = new(); // Çemberin kapsadığı tüm ilçeler/bölgeler
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
     public double RadiusInKm { get; set; } = 10.0;
@@ -30,32 +35,63 @@ public class RecommendationRequestDto
 
 public class VenueRecommendationDto
 {
+    // 1. Kimlik & Lokasyon (Global)
     public Guid Id { get; set; }
+    public int? DistrictId { get; set; }
     public string Name { get; set; } = string.Empty;
+    public string Country { get; set; } = "Türkiye";
+    public string CountryCode { get; set; } = "TR";
+    public string City { get; set; } = "İstanbul";
+    public string StateOrRegion { get; set; } = string.Empty;
     public string District { get; set; } = string.Empty;
     public string Neighborhood { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
-    public double Latitude { get; set; }
-    public double Longitude { get; set; }
-    public double DistanceInKm { get; set; }
-    
-    public PriceLevel PriceLevel { get; set; }
-    public NoiseLevel NoiseLevel { get; set; }
-    public List<string> VibeTags { get; set; } = new();
-    public string SeatingArrangement { get; set; } = string.Empty;
-    public bool HasAlcohol { get; set; }
-    public bool HasValetParking { get; set; }
-    public bool RequiresReservation { get; set; }
-    public bool HasOutdoorSeating { get; set; }
+    public string PostalCode { get; set; } = string.Empty;
+    public string Currency { get; set; } = "TRY";
+    public string TimeZone { get; set; } = "Europe/Istanbul";
     public double GoogleRating { get; set; }
+    public int ReviewCount { get; set; }
     public double MatchScore { get; set; } // 0 - 100%
-
     public string HeroImageUrl { get; set; } = string.Empty;
     public List<string> GalleryImages { get; set; } = new();
     public string GoogleMapsUrl { get; set; } = string.Empty;
     public string InstagramHandle { get; set; } = string.Empty;
+    public string? WebsiteUrl { get; set; }
+    public string? PhoneNumber { get; set; }
 
-    // AI Curation Fields
+    // 2. Ambiyans & Duyusal Profil
+    public NoiseLevel NoiseLevel { get; set; }
+    public string LightingStyle { get; set; } = "Sıcak Sarı";
+    public string MusicProfile { get; set; } = "Caz & Akustik";
+    public string DressCode { get; set; } = "Casual";
+    public List<string> ViewType { get; set; } = new();
+
+    // 3. Mutfak, Menü & İmza Lezzetler
+    public PriceLevel PriceLevel { get; set; }
+    public List<string> CuisineTypes { get; set; } = new();
+    public List<string> MealTimes { get; set; } = new();
+    public List<string> SignatureItems { get; set; } = new();
+    public List<string> DietaryOptions { get; set; } = new();
+
+    // 4. Masa, Oturma & Mekansal Taktikler
+    public List<string> SeatingTypes { get; set; } = new();
+    public string TableSpacing { get; set; } = "Ferah";
+    public string BestTableTip { get; set; } = string.Empty;
+    public string SeatingArrangement { get; set; } = string.Empty;
+
+    // 5. Pratik Kolaylıklar & Lojistik
+    public bool HasAlcohol { get; set; }
+    public bool HasOutdoorSeating { get; set; }
+    public bool HasValetParking { get; set; }
+    public bool RequiresReservation { get; set; }
+    public bool IsPetFriendly { get; set; }
+    public bool HasWifiAndSockets { get; set; }
+    public string SmokingArea { get; set; } = "Bahçe";
+
+    // 6. AI, Buluşma Amaçları & Tavsiye
+    public List<string> SuitableOccasions { get; set; } = new();
+    public List<string> VibeTags { get; set; } = new();
+    public string BestTimeToVisit { get; set; } = string.Empty;
     public DateAdviceDto Advice { get; set; } = new();
 }
 
@@ -78,25 +114,54 @@ public class RecommendationResponseDto
 public class CreateVenueDto
 {
     public string Name { get; set; } = string.Empty;
+    public int? DistrictId { get; set; }
+    public string Country { get; set; } = "Türkiye";
+    public string CountryCode { get; set; } = "TR";
+    public string City { get; set; } = "İstanbul";
+    public string StateOrRegion { get; set; } = string.Empty;
     public string District { get; set; } = string.Empty;
     public string Neighborhood { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
-    public double Latitude { get; set; }
-    public double Longitude { get; set; }
-    public PriceLevel PriceLevel { get; set; } = PriceLevel.Moderate;
-    public NoiseLevel NoiseLevel { get; set; } = NoiseLevel.ModerateMusic;
-    public List<DateConcept> CompatibleConcepts { get; set; } = new();
-    public List<string> VibeTags { get; set; } = new();
-    public string SeatingArrangement { get; set; } = string.Empty;
-    public bool HasAlcohol { get; set; }
-    public bool HasValetParking { get; set; }
-    public bool RequiresReservation { get; set; }
-    public bool HasOutdoorSeating { get; set; }
-    public double FirstDateSuitabilityScore { get; set; } = 9.0;
+    public string PostalCode { get; set; } = string.Empty;
+    public string Currency { get; set; } = "TRY";
+    public string TimeZone { get; set; } = "Europe/Istanbul";
     public double GoogleRating { get; set; } = 4.5;
     public int ReviewCount { get; set; } = 100;
     public string HeroImageUrl { get; set; } = string.Empty;
     public List<string> GalleryImages { get; set; } = new();
     public string GoogleMapsUrl { get; set; } = string.Empty;
     public string InstagramHandle { get; set; } = string.Empty;
+    public string? WebsiteUrl { get; set; }
+    public string? PhoneNumber { get; set; }
+
+    public NoiseLevel NoiseLevel { get; set; } = NoiseLevel.ModerateMusic;
+    public string LightingStyle { get; set; } = "Sıcak Sarı";
+    public string MusicProfile { get; set; } = "Caz & Akustik";
+    public string DressCode { get; set; } = "Casual";
+    public List<string> ViewType { get; set; } = new();
+
+    public PriceLevel PriceLevel { get; set; } = PriceLevel.Moderate;
+    public List<string> CuisineTypes { get; set; } = new();
+    public List<string> MealTimes { get; set; } = new();
+    public List<string> SignatureItems { get; set; } = new();
+    public List<string> DietaryOptions { get; set; } = new();
+
+    public List<string> SeatingTypes { get; set; } = new();
+    public string TableSpacing { get; set; } = "Ferah";
+    public string BestTableTip { get; set; } = string.Empty;
+    public string SeatingArrangement { get; set; } = string.Empty;
+
+    public bool HasAlcohol { get; set; }
+    public bool HasOutdoorSeating { get; set; }
+    public bool HasValetParking { get; set; }
+    public bool RequiresReservation { get; set; }
+    public bool IsPetFriendly { get; set; }
+    public bool HasWifiAndSockets { get; set; }
+    public string SmokingArea { get; set; } = "Bahçe";
+
+    public List<string> SuitableOccasions { get; set; } = new();
+    public List<string> VibeTags { get; set; } = new();
+    public string BestTimeToVisit { get; set; } = string.Empty;
+    public double FirstDateSuitabilityScore { get; set; } = 8.5;
+    public string RawMetadata { get; set; } = "{}";
 }

@@ -56,23 +56,71 @@ public class VenuesController : ControllerBase
     }
 
     /// <summary>
-    /// İstanbul'un tüm 39 ilçesini koordinatları ve popüler semtleriyle listeler.
+    /// Veritabanında kayıtlı ülkeleri listeler.
+    /// </summary>
+    [HttpGet("countries")]
+    public async Task<ActionResult<List<string>>> GetCountries(CancellationToken cancellationToken)
+    {
+        var countries = await _venueRepository.GetAvailableCountriesAsync(cancellationToken);
+        return Ok(countries);
+    }
+
+    /// <summary>
+    /// Belirli bir ülkedeki veya tüm dünyadaki kayıtlı şehirleri listeler.
+    /// </summary>
+    [HttpGet("cities")]
+    public async Task<ActionResult<List<string>>> GetCities([FromQuery] string? country, CancellationToken cancellationToken)
+    {
+        var cities = await _venueRepository.GetAvailableCitiesAsync(country, cancellationToken);
+        return Ok(cities);
+    }
+
+    /// <summary>
+    /// Şehir ve ülkeye göre ilçeleri ve popüler semtleri listeler.
     /// </summary>
     [HttpGet("districts")]
-    public async Task<ActionResult<List<object>>> GetDistricts(CancellationToken cancellationToken)
+    public async Task<ActionResult<List<object>>> GetDistricts(
+        [FromQuery] string? country,
+        [FromQuery] string? city,
+        [FromQuery] string? zone,
+        CancellationToken cancellationToken)
     {
-        var districts = await _dbContext.Districts
-            .AsNoTracking()
-            .OrderBy(d => d.Side)
+        var query = _dbContext.Districts.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(country))
+        {
+            query = query.Where(d => d.Country.ToLower() == country.ToLower() || d.CountryCode.ToLower() == country.ToLower());
+        }
+
+        if (!string.IsNullOrWhiteSpace(city))
+        {
+            query = query.Where(d => d.City.ToLower() == city.ToLower());
+        }
+
+        if (!string.IsNullOrWhiteSpace(zone))
+        {
+            query = query.Where(d => d.Zone.ToLower() == zone.ToLower());
+        }
+
+        var districts = await query
+            .OrderBy(d => d.City)
+            .ThenBy(d => d.Zone)
             .ThenBy(d => d.Name)
             .Select(d => new
             {
                 d.Id,
+                d.Country,
+                d.CountryCode,
+                d.City,
+                d.StateOrRegion,
                 d.Name,
-                d.Side,
+                d.Zone,
+                Side = d.Zone, // Geriye dönük mobil uyumluluk
                 d.Latitude,
                 d.Longitude,
-                d.PopularNeighborhoods
+                d.PopularNeighborhoods,
+                d.TotalVenuesCount,
+                d.IsActive
             })
             .ToListAsync(cancellationToken);
 
@@ -97,31 +145,68 @@ public class VenuesController : ControllerBase
         [FromBody] CreateVenueDto dto,
         CancellationToken cancellationToken)
     {
-        var gf = new NetTopologySuite.Geometries.GeometryFactory(new NetTopologySuite.Geometries.PrecisionModel(), 4326);
+        int? districtId = dto.DistrictId;
+        if (!districtId.HasValue && !string.IsNullOrWhiteSpace(dto.District))
+        {
+            var matchedDistrict = await _dbContext.Districts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => d.Name.ToLower() == dto.District.ToLower(), cancellationToken);
+            districtId = matchedDistrict?.Id;
+        }
 
         var venue = new DateSpot.Core.Entities.Venue
         {
             Name = dto.Name,
+            DistrictId = districtId,
+            Country = string.IsNullOrWhiteSpace(dto.Country) ? "Türkiye" : dto.Country,
+            CountryCode = string.IsNullOrWhiteSpace(dto.CountryCode) ? "TR" : dto.CountryCode,
+            City = string.IsNullOrWhiteSpace(dto.City) ? "İstanbul" : dto.City,
+            StateOrRegion = dto.StateOrRegion ?? string.Empty,
             District = dto.District,
             Neighborhood = dto.Neighborhood,
             Address = dto.Address,
-            Location = gf.CreatePoint(new NetTopologySuite.Geometries.Coordinate(dto.Longitude, dto.Latitude)),
-            PriceLevel = dto.PriceLevel,
-            NoiseLevel = dto.NoiseLevel,
-            CompatibleConcepts = dto.CompatibleConcepts,
-            VibeTags = dto.VibeTags,
-            SeatingArrangement = dto.SeatingArrangement,
-            HasAlcohol = dto.HasAlcohol,
-            HasValetParking = dto.HasValetParking,
-            RequiresReservation = dto.RequiresReservation,
-            HasOutdoorSeating = dto.HasOutdoorSeating,
-            FirstDateSuitabilityScore = dto.FirstDateSuitabilityScore,
+            PostalCode = dto.PostalCode ?? string.Empty,
+            Currency = string.IsNullOrWhiteSpace(dto.Currency) ? "TRY" : dto.Currency,
+            TimeZone = string.IsNullOrWhiteSpace(dto.TimeZone) ? "Europe/Istanbul" : dto.TimeZone,
             GoogleRating = dto.GoogleRating,
             ReviewCount = dto.ReviewCount,
             HeroImageUrl = dto.HeroImageUrl,
             GalleryImages = dto.GalleryImages,
             GoogleMapsUrl = dto.GoogleMapsUrl,
-            InstagramHandle = dto.InstagramHandle
+            InstagramHandle = dto.InstagramHandle,
+            WebsiteUrl = dto.WebsiteUrl,
+            PhoneNumber = dto.PhoneNumber,
+
+            NoiseLevel = dto.NoiseLevel,
+            LightingStyle = dto.LightingStyle,
+            MusicProfile = dto.MusicProfile,
+            DressCode = dto.DressCode,
+            ViewType = dto.ViewType,
+
+            PriceLevel = dto.PriceLevel,
+            CuisineTypes = dto.CuisineTypes,
+            MealTimes = dto.MealTimes,
+            SignatureItems = dto.SignatureItems,
+            DietaryOptions = dto.DietaryOptions,
+
+            SeatingTypes = dto.SeatingTypes,
+            TableSpacing = dto.TableSpacing,
+            BestTableTip = dto.BestTableTip,
+            SeatingArrangement = dto.SeatingArrangement,
+
+            HasAlcohol = dto.HasAlcohol,
+            HasOutdoorSeating = dto.HasOutdoorSeating,
+            HasValetParking = dto.HasValetParking,
+            RequiresReservation = dto.RequiresReservation,
+            IsPetFriendly = dto.IsPetFriendly,
+            HasWifiAndSockets = dto.HasWifiAndSockets,
+            SmokingArea = dto.SmokingArea,
+
+            SuitableOccasions = dto.SuitableOccasions,
+            VibeTags = dto.VibeTags,
+            BestTimeToVisit = dto.BestTimeToVisit,
+            FirstDateSuitabilityScore = dto.FirstDateSuitabilityScore,
+            RawMetadata = dto.RawMetadata
         };
 
         await _dbContext.Venues.AddAsync(venue, cancellationToken);
@@ -131,6 +216,10 @@ public class VenuesController : ControllerBase
         { 
             id = venue.Id, 
             name = venue.Name, 
+            districtId = venue.DistrictId,
+            country = venue.Country,
+            city = venue.City,
+            district = venue.District,
             message = "Mekan başarıyla veritabanına eklendi." 
         });
     }
@@ -143,31 +232,71 @@ public class VenuesController : ControllerBase
         [FromBody] List<CreateVenueDto> dtoList,
         CancellationToken cancellationToken)
     {
-        var gf = new NetTopologySuite.Geometries.GeometryFactory(new NetTopologySuite.Geometries.PrecisionModel(), 4326);
+        var allDistricts = await _dbContext.Districts.AsNoTracking().ToListAsync(cancellationToken);
+        var districtMap = allDistricts.ToDictionary(d => d.Name.ToLower(), d => d.Id);
 
-        var venueList = dtoList.Select(dto => new DateSpot.Core.Entities.Venue
+        var venueList = dtoList.Select(dto =>
         {
-            Name = dto.Name,
-            District = dto.District,
-            Neighborhood = dto.Neighborhood,
-            Address = dto.Address,
-            Location = gf.CreatePoint(new NetTopologySuite.Geometries.Coordinate(dto.Longitude, dto.Latitude)),
-            PriceLevel = dto.PriceLevel,
-            NoiseLevel = dto.NoiseLevel,
-            CompatibleConcepts = dto.CompatibleConcepts,
-            VibeTags = dto.VibeTags,
-            SeatingArrangement = dto.SeatingArrangement,
-            HasAlcohol = dto.HasAlcohol,
-            HasValetParking = dto.HasValetParking,
-            RequiresReservation = dto.RequiresReservation,
-            HasOutdoorSeating = dto.HasOutdoorSeating,
-            FirstDateSuitabilityScore = dto.FirstDateSuitabilityScore,
-            GoogleRating = dto.GoogleRating,
-            ReviewCount = dto.ReviewCount,
-            HeroImageUrl = dto.HeroImageUrl,
-            GalleryImages = dto.GalleryImages,
-            GoogleMapsUrl = dto.GoogleMapsUrl,
-            InstagramHandle = dto.InstagramHandle
+            int? matchedId = dto.DistrictId;
+            if (!matchedId.HasValue && !string.IsNullOrWhiteSpace(dto.District) && districtMap.TryGetValue(dto.District.ToLower(), out int dId))
+            {
+                matchedId = dId;
+            }
+
+            return new DateSpot.Core.Entities.Venue
+            {
+                Name = dto.Name,
+                DistrictId = matchedId,
+                Country = string.IsNullOrWhiteSpace(dto.Country) ? "Türkiye" : dto.Country,
+                CountryCode = string.IsNullOrWhiteSpace(dto.CountryCode) ? "TR" : dto.CountryCode,
+                City = string.IsNullOrWhiteSpace(dto.City) ? "İstanbul" : dto.City,
+                StateOrRegion = dto.StateOrRegion ?? string.Empty,
+                District = dto.District,
+                Neighborhood = dto.Neighborhood,
+                Address = dto.Address,
+                PostalCode = dto.PostalCode ?? string.Empty,
+                Currency = string.IsNullOrWhiteSpace(dto.Currency) ? "TRY" : dto.Currency,
+                TimeZone = string.IsNullOrWhiteSpace(dto.TimeZone) ? "Europe/Istanbul" : dto.TimeZone,
+                GoogleRating = dto.GoogleRating,
+                ReviewCount = dto.ReviewCount,
+                HeroImageUrl = dto.HeroImageUrl,
+                GalleryImages = dto.GalleryImages,
+                GoogleMapsUrl = dto.GoogleMapsUrl,
+                InstagramHandle = dto.InstagramHandle,
+                WebsiteUrl = dto.WebsiteUrl,
+                PhoneNumber = dto.PhoneNumber,
+
+                NoiseLevel = dto.NoiseLevel,
+                LightingStyle = dto.LightingStyle,
+                MusicProfile = dto.MusicProfile,
+                DressCode = dto.DressCode,
+                ViewType = dto.ViewType,
+
+                PriceLevel = dto.PriceLevel,
+                CuisineTypes = dto.CuisineTypes,
+                MealTimes = dto.MealTimes,
+                SignatureItems = dto.SignatureItems,
+                DietaryOptions = dto.DietaryOptions,
+
+                SeatingTypes = dto.SeatingTypes,
+                TableSpacing = dto.TableSpacing,
+                BestTableTip = dto.BestTableTip,
+                SeatingArrangement = dto.SeatingArrangement,
+
+                HasAlcohol = dto.HasAlcohol,
+                HasOutdoorSeating = dto.HasOutdoorSeating,
+                HasValetParking = dto.HasValetParking,
+                RequiresReservation = dto.RequiresReservation,
+                IsPetFriendly = dto.IsPetFriendly,
+                HasWifiAndSockets = dto.HasWifiAndSockets,
+                SmokingArea = dto.SmokingArea,
+
+                SuitableOccasions = dto.SuitableOccasions,
+                VibeTags = dto.VibeTags,
+                BestTimeToVisit = dto.BestTimeToVisit,
+                FirstDateSuitabilityScore = dto.FirstDateSuitabilityScore,
+                RawMetadata = dto.RawMetadata
+            };
         }).ToList();
 
         await _dbContext.Venues.AddRangeAsync(venueList, cancellationToken);

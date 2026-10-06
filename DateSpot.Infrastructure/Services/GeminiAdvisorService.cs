@@ -68,6 +68,12 @@ public class GeminiAdvisorService : IGeminiAdvisorService
                 v.District,
                 v.Neighborhood,
                 Vibes = string.Join(", ", v.VibeTags),
+                Cuisines = string.Join(", ", v.CuisineTypes),
+                SignatureDishes = string.Join(", ", v.SignatureItems),
+                Views = string.Join(", ", v.ViewType),
+                v.LightingStyle,
+                v.TableSpacing,
+                v.BestTableTip,
                 v.SeatingArrangement,
                 Noise = v.NoiseLevel.ToString(),
                 HasAlcohol = v.HasAlcohol
@@ -79,7 +85,7 @@ Aşağıda seçilen 3 mekan için her biri adına Türkçe olarak şu 4 alanı d
 1. WhyThisSpot: Bu mekanın '{occasionText}' için neden en mükemmel tercih olduğunu anlatan etkileyici ve ikna edici 2-3 cümle.
 2. IcebreakerTopic: Bu mekanın ambiyansına ve '{occasionText}' amacına uygun masada açılabilecek zekice/keyifli bir sohbet konusu veya ortam tüyosu.
 3. TableTactics: Masada oturma düzeni, rezerve edilecek en iyi köşe veya ortam taktiği (Örn: 'Bahçe tarafındaki köşeyi isteyin', 'Toplantı/sohbet için arka sessiz masayı seçin').
-4. IdealOrderRecommendation: Bu mekanda sipariş edilmesi en tavsiye edilen, risksiz ve popüler yiyecek/içecek önerisi.
+4. IdealOrderRecommendation: Bu mekanda sipariş edilmesi en tavsiye edilen, risksiz ve popüler yiyecek/içecek önerisi (Mekanın SignatureDishes verilerinden ilham al).
 
 Mekanlar:
 {JsonSerializer.Serialize(venuesSummary)}

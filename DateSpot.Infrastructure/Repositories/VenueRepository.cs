@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using NetTopologySuite.Geometries;
 using DateSpot.Core.Entities;
 using DateSpot.Core.Enums;
 using DateSpot.Core.Interfaces;
@@ -10,20 +9,17 @@ namespace DateSpot.Infrastructure.Repositories;
 public class VenueRepository : IVenueRepository
 {
     private readonly DateSpotDbContext _context;
-    private readonly GeometryFactory _geometryFactory;
 
     public VenueRepository(DateSpotDbContext context)
     {
         _context = context;
-        _geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
     }
 
     public async Task<List<Venue>> GetVenuesByFiltersAsync(
+        string? country,
+        string? city,
         string? district,
         List<string>? coveredDistricts,
-        double? userLat,
-        double? userLng,
-        double radiusInKm,
         PriceLevel? maxPriceLevel,
         bool? requiresAlcohol,
         bool? requiresParking,
@@ -33,7 +29,26 @@ public class VenueRepository : IVenueRepository
         {
             var query = _context.Venues.AsNoTracking().AsQueryable();
 
-            // 1. Çoklu Kapsanan İlçeler Filtresi
+            // 1. Ülke Filtresi (Opsiyonel)
+            if (!string.IsNullOrWhiteSpace(country) && 
+                !country.Equals("Tümü", StringComparison.OrdinalIgnoreCase) && 
+                !country.Equals("Hepsi", StringComparison.OrdinalIgnoreCase) && 
+                !country.Equals("All", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(v => v.Country.ToLower() == country.ToLower() || v.CountryCode.ToLower() == country.ToLower());
+            }
+
+            // 2. Şehir Filtresi (Opsiyonel)
+            if (!string.IsNullOrWhiteSpace(city) && 
+                !city.Equals("Tümü", StringComparison.OrdinalIgnoreCase) && 
+                !city.Equals("Hepsi", StringComparison.OrdinalIgnoreCase) && 
+                !city.Equals("Tüm Şehir", StringComparison.OrdinalIgnoreCase) && 
+                !city.Equals("All Cities", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(v => v.City.ToLower() == city.ToLower());
+            }
+
+            // 3. İlçe / Bölge Filtresi (CoveredDistricts veya Tek İlçe)
             if (coveredDistricts != null && coveredDistricts.Any())
             {
                 var lowerDistricts = coveredDistricts.Select(d => d.ToLower()).ToList();
@@ -41,33 +56,26 @@ public class VenueRepository : IVenueRepository
             }
             else if (!string.IsNullOrWhiteSpace(district) && 
                 !district.Equals("Tüm İstanbul", StringComparison.OrdinalIgnoreCase) &&
-                !district.Equals("Hepsi", StringComparison.OrdinalIgnoreCase))
+                !district.Equals("Tüm Şehir", StringComparison.OrdinalIgnoreCase) &&
+                !district.Equals("Hepsi", StringComparison.OrdinalIgnoreCase) &&
+                !district.Equals("All", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(v => v.District.ToLower() == district.ToLower());
             }
 
-            // 2. PostGIS Konum / Yarıçap Filtresi (Kullanıcı koordinat vermişse)
-            if (userLat.HasValue && userLng.HasValue)
-            {
-                var userPoint = _geometryFactory.CreatePoint(new Coordinate(userLng.Value, userLat.Value));
-                // Yaklaşık derece cinsinden mesafe (1 derece ~ 111 km)
-                double radiusInDegrees = radiusInKm / 111.0;
-                query = query.Where(v => v.Location.IsWithinDistance(userPoint, radiusInDegrees));
-            }
-
-            // 3. Bütçe Filtresi
+            // 4. Bütçe Filtresi
             if (maxPriceLevel.HasValue)
             {
                 query = query.Where(v => v.PriceLevel <= maxPriceLevel.Value);
             }
 
-            // 4. Alkol Filtresi
+            // 5. Alkol Filtresi
             if (requiresAlcohol.HasValue && requiresAlcohol.Value)
             {
                 query = query.Where(v => v.HasAlcohol);
             }
 
-            // 5. Otopark Filtresi
+            // 6. Otopark / Vale Filtresi
             if (requiresParking.HasValue && requiresParking.Value)
             {
                 query = query.Where(v => v.HasValetParking);
@@ -80,6 +88,45 @@ public class VenueRepository : IVenueRepository
         {
             Console.WriteLine($"[VenueRepository] DB query failed: {ex.Message}");
             return new List<Venue>();
+        }
+    }
+
+    public async Task<List<string>> GetAvailableCountriesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _context.Venues
+                .AsNoTracking()
+                .Select(v => v.Country)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync(cancellationToken);
+        }
+        catch
+        {
+            return new List<string> { "Türkiye" };
+        }
+    }
+
+    public async Task<List<string>> GetAvailableCitiesAsync(string? country = null, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var query = _context.Venues.AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(country))
+            {
+                query = query.Where(v => v.Country.ToLower() == country.ToLower() || v.CountryCode.ToLower() == country.ToLower());
+            }
+
+            return await query
+                .Select(v => v.City)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync(cancellationToken);
+        }
+        catch
+        {
+            return new List<string> { "İstanbul" };
         }
     }
 

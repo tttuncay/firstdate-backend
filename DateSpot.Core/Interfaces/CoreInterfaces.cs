@@ -6,16 +6,17 @@ namespace DateSpot.Core.Interfaces;
 public interface IVenueRepository
 {
     Task<List<Venue>> GetVenuesByFiltersAsync(
+        string? country,
+        string? city,
         string? district,
         List<string>? coveredDistricts,
-        double? userLat,
-        double? userLng,
-        double radiusInKm,
         PriceLevel? maxPriceLevel,
         bool? requiresAlcohol,
         bool? requiresParking,
         CancellationToken cancellationToken = default);
 
+    Task<List<string>> GetAvailableCountriesAsync(CancellationToken cancellationToken = default);
+    Task<List<string>> GetAvailableCitiesAsync(string? country = null, CancellationToken cancellationToken = default);
     Task<List<Venue>> GetAllVenuesAsync(CancellationToken cancellationToken = default);
     Task<Venue?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task AddRangeAsync(IEnumerable<Venue> venues, CancellationToken cancellationToken = default);
