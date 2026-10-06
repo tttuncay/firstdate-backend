@@ -127,6 +127,13 @@ public class VenuesController : ControllerBase
         return Ok(districts);
     }
 
+    [HttpGet("all")]
+    public async Task<ActionResult<List<DateSpot.Core.Entities.Venue>>> GetAll(CancellationToken cancellationToken)
+    {
+        var venues = await _venueRepository.GetAllVenuesAsync(cancellationToken);
+        return Ok(venues);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<VenueRecommendationDto>> GetById(Guid id, CancellationToken cancellationToken)
     {
