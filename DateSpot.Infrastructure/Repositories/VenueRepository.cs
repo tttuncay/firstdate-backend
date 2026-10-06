@@ -36,30 +36,44 @@ public class VenueRepository : IVenueRepository
 
             // 1. Ülke Filtresi (Opsiyonel & Güvenli)
             if (!string.IsNullOrWhiteSpace(country) && 
+                !country.Equals("Türkiye", StringComparison.OrdinalIgnoreCase) &&
+                !country.Equals("Turkey", StringComparison.OrdinalIgnoreCase) &&
+                !country.Equals("TR", StringComparison.OrdinalIgnoreCase) &&
                 !country.Equals("Tümü", StringComparison.OrdinalIgnoreCase) && 
                 !country.Equals("Hepsi", StringComparison.OrdinalIgnoreCase) && 
                 !country.Equals("All", StringComparison.OrdinalIgnoreCase))
             {
-                var lowerCountry = country.ToLower();
-                query = query.Where(v => string.IsNullOrEmpty(v.Country) || v.Country.ToLower() == lowerCountry || v.CountryCode.ToLower() == lowerCountry);
+                var countryVariations = new List<string> { country, country.ToLower(), country.ToLowerInvariant() }.Distinct().ToList();
+                query = query.Where(v => string.IsNullOrEmpty(v.Country) || countryVariations.Contains(v.Country) || countryVariations.Contains(v.CountryCode));
             }
 
             // 2. Şehir Filtresi (Opsiyonel & Güvenli)
             if (!string.IsNullOrWhiteSpace(city) && 
+                !city.Equals("İstanbul", StringComparison.OrdinalIgnoreCase) &&
+                !city.Equals("Istanbul", StringComparison.OrdinalIgnoreCase) &&
                 !city.Equals("Tümü", StringComparison.OrdinalIgnoreCase) && 
                 !city.Equals("Hepsi", StringComparison.OrdinalIgnoreCase) && 
                 !city.Equals("Tüm Şehir", StringComparison.OrdinalIgnoreCase) && 
                 !city.Equals("All Cities", StringComparison.OrdinalIgnoreCase))
             {
-                var lowerCity = city.ToLower();
-                query = query.Where(v => string.IsNullOrEmpty(v.City) || v.City.ToLower() == lowerCity);
+                var cityVariations = new List<string> { city, city.ToLower(), city.ToLowerInvariant() }.Distinct().ToList();
+                query = query.Where(v => string.IsNullOrEmpty(v.City) || cityVariations.Contains(v.City));
             }
 
             // 3. İlçe / Bölge Filtresi (CoveredDistricts veya Tek İlçe)
             if (coveredDistricts != null && coveredDistricts.Any())
             {
-                var lowerDistricts = coveredDistricts.Select(d => d.ToLower()).ToList();
-                query = query.Where(v => lowerDistricts.Contains(v.District.ToLower()));
+                var allVariations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var d in coveredDistricts)
+                {
+                    if (string.IsNullOrWhiteSpace(d)) continue;
+                    allVariations.Add(d);
+                    allVariations.Add(d.ToLower());
+                    allVariations.Add(d.ToLowerInvariant());
+                    allVariations.Add(d.ToUpper());
+                }
+                var districtList = allVariations.ToList();
+                query = query.Where(v => districtList.Contains(v.District));
             }
             else if (!string.IsNullOrWhiteSpace(district) && 
                 !district.Equals("Tüm İstanbul", StringComparison.OrdinalIgnoreCase) &&
@@ -67,8 +81,8 @@ public class VenueRepository : IVenueRepository
                 !district.Equals("Hepsi", StringComparison.OrdinalIgnoreCase) && 
                 !district.Equals("All", StringComparison.OrdinalIgnoreCase))
             {
-                var lowerDistrict = district.ToLower();
-                query = query.Where(v => v.District.ToLower() == lowerDistrict);
+                var districtVariations = new List<string> { district, district.ToLower(), district.ToLowerInvariant(), district.ToUpper() }.Distinct().ToList();
+                query = query.Where(v => districtVariations.Contains(v.District));
             }
 
             // 4. Bütçe Filtresi
@@ -96,7 +110,7 @@ public class VenueRepository : IVenueRepository
             }
 
             // 8. Huni 1. Aşama (Stage 1): Havuzdan daha geniş aday kümesi çekip prompt uyumuna göre sıralama
-            int fetchPoolSize = candidateLimit > 0 ? Math.Max(candidateLimit * 3, 200) : 300;
+            int fetchPoolSize = candidateLimit > 0 ? Math.Max(candidateLimit * 10, 600) : 600;
             var pool = await query
                 .OrderByDescending(v => v.GoogleRating)
                 .ThenByDescending(v => v.ReviewCount)
@@ -136,90 +150,169 @@ public class VenueRepository : IVenueRepository
         var p = prompt.ToLower();
         double score = 0.0;
 
-        // 1. Deniz / Sahil / Manzara / Boğaz Niyeti
-        if (p.Contains("deniz") || p.Contains("sahil") || p.Contains("kordon") || p.Contains("boğaz") || p.Contains("bogaz") || p.Contains("marina") || p.Contains("rıhtım") || p.Contains("rihtim") || p.Contains("manzara") || p.Contains("dalga") || p.Contains("yalı") || p.Contains("yali") || p.Contains("kıyı") || p.Contains("iskeleye"))
+        var searchable = $"{v.Name} {v.Neighborhood} {v.Address} {string.Join(" ", v.VibeTags ?? new())} {string.Join(" ", v.CuisineTypes ?? new())} {string.Join(" ", v.SignatureItems ?? new())} {string.Join(" ", v.ViewType ?? new())} {string.Join(" ", v.SuitableOccasions ?? new())} {v.BestTableTip}".ToLower();
+
+        // 1. BALIK / BALIKÇI / DENİZ ÜRÜNLERİ / MEZE / SEAFOOD NİYETİ
+        bool isFishPrompt = p.Contains("balık") || p.Contains("balik") || p.Contains("balıkçı") || p.Contains("balikci") 
+            || p.Contains("seafood") || p.Contains("deniz ürünleri") || p.Contains("deniz urunleri") || p.Contains("kalamar") 
+            || p.Contains("karides") || p.Contains("levrek") || p.Contains("çipura") || p.Contains("cipura") 
+            || p.Contains("ahtapot") || p.Contains("hamsi") || p.Contains("rakı balık") || p.Contains("raki balik") 
+            || p.Contains("midye") || p.Contains("balık ekmek");
+
+        if (isFishPrompt)
+        {
+            bool isFishVenue = searchable.Contains("balık") || searchable.Contains("balik") || searchable.Contains("fish") 
+                || searchable.Contains("seafood") || searchable.Contains("deniz ürünleri") || searchable.Contains("meze") 
+                || searchable.Contains("meyhane");
+
+            if (isFishVenue)
+            {
+                score += 300.0;
+                if (v.Name.Contains("Balık", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Balik", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Fish", StringComparison.OrdinalIgnoreCase))
+                    score += 100.0;
+            }
+            else
+            {
+                // Balıkçı arayan birine tatlıcı veya kahveci önerilmemeli!
+                bool isCafe = searchable.Contains("kahve") || searchable.Contains("coffee") || searchable.Contains("cafe") 
+                    || searchable.Contains("kafe") || searchable.Contains("tatlı") || searchable.Contains("bakery") || searchable.Contains("pastane");
+                if (isCafe)
+                {
+                    score -= 200.0;
+                }
+            }
+        }
+
+        // 2. MANGAL / ET / OCAKBAŞI / KEBAP / STEAK / IZGARA NİYETİ
+        bool isMeatPrompt = p.Contains("mangal") || p.Contains("et") || p.Contains("ocakbaşı") || p.Contains("ocakbasi") 
+            || p.Contains("kebap") || p.Contains("kebapçı") || p.Contains("kebapci") || p.Contains("ızgara") 
+            || p.Contains("izgara") || p.Contains("köfte") || p.Contains("kofte") || p.Contains("biftek") 
+            || p.Contains("kendin pişir") || p.Contains("etçi") || p.Contains("steak") || p.Contains("döner") 
+            || p.Contains("antrikot") || p.Contains("pirzola");
+
+        if (isMeatPrompt)
+        {
+            bool isMeatVenue = searchable.Contains("ocakbaşı") || searchable.Contains("kebap") || searchable.Contains("mangal") 
+                || searchable.Contains("steak") || searchable.Contains("ızgara") || searchable.Contains("köfte") || searchable.Contains("et lokantası");
+
+            if (isMeatVenue)
+            {
+                score += 300.0;
+                if (v.Name.Contains("Ocakbaşı", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Kebap", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Mangal", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Steak", StringComparison.OrdinalIgnoreCase))
+                    score += 100.0;
+            }
+            else
+            {
+                bool isCafe = searchable.Contains("kahve") || searchable.Contains("coffee") || searchable.Contains("cafe") 
+                    || searchable.Contains("kafe") || searchable.Contains("tatlı") || searchable.Contains("bakery");
+                if (isCafe)
+                {
+                    score -= 200.0;
+                }
+            }
+        }
+
+        // 3. DENİZ KENARI / SAHİL / BOĞAZ / DENİZ MANZARASI / KORDON / YALI / MARİNA NİYETİ
+        bool isSeaPrompt = p.Contains("deniz") || p.Contains("sahil") || p.Contains("kordon") || p.Contains("boğaz") 
+            || p.Contains("bogaz") || p.Contains("marina") || p.Contains("rıhtım") || p.Contains("rihtim") 
+            || p.Contains("manzara") || p.Contains("dalga") || p.Contains("yalı") || p.Contains("yali") 
+            || p.Contains("kıyı") || p.Contains("iskeleye") || p.Contains("kordon");
+
+        if (isSeaPrompt)
         {
             if (v.ViewType != null && v.ViewType.Any(vt => vt.Contains("Deniz", StringComparison.OrdinalIgnoreCase) || vt.Contains("Boğaz", StringComparison.OrdinalIgnoreCase) || vt.Contains("Sahil", StringComparison.OrdinalIgnoreCase)))
-                score += 100.0;
+                score += 120.0;
 
             if (v.VibeTags != null && v.VibeTags.Any(vt => vt.Contains("Deniz", StringComparison.OrdinalIgnoreCase) || vt.Contains("Boğaz", StringComparison.OrdinalIgnoreCase) || vt.Contains("Manzara", StringComparison.OrdinalIgnoreCase)))
-                score += 80.0;
-
-            if (!string.IsNullOrEmpty(v.Neighborhood) && (v.Neighborhood.Contains("Sahil", StringComparison.OrdinalIgnoreCase) || v.Neighborhood.Contains("Moda", StringComparison.OrdinalIgnoreCase) || v.Neighborhood.Contains("Bebek", StringComparison.OrdinalIgnoreCase) || v.Neighborhood.Contains("Kuzguncuk", StringComparison.OrdinalIgnoreCase) || v.Neighborhood.Contains("Kordon", StringComparison.OrdinalIgnoreCase) || v.Neighborhood.Contains("Marina", StringComparison.OrdinalIgnoreCase)))
-                score += 60.0;
-
-            if (!string.IsNullOrEmpty(v.Address) && (v.Address.Contains("Sahil", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Rıhtım", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Kordon", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Marina", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Yalı", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Deniz", StringComparison.OrdinalIgnoreCase)))
-                score += 70.0;
-
-            if (v.Name.Contains("Sahil", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Marina", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Deniz", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Kıyı", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Yalı", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Boğaz", StringComparison.OrdinalIgnoreCase))
-                score += 75.0;
-        }
-
-        // 2. Mangal / Et / Ocakbaşı / Kebap Niyeti
-        if (p.Contains("mangal") || p.Contains("et") || p.Contains("ocakbaşı") || p.Contains("ocakbasi") || p.Contains("kebap") || p.Contains("ızgara") || p.Contains("izgara") || p.Contains("köfte") || p.Contains("kofte") || p.Contains("biftek") || p.Contains("kendin pişir") || p.Contains("etçi"))
-        {
-            if (v.CuisineTypes != null && v.CuisineTypes.Any(c => c.Contains("Ocakbaşı", StringComparison.OrdinalIgnoreCase) || c.Contains("Kebap", StringComparison.OrdinalIgnoreCase) || c.Contains("Et", StringComparison.OrdinalIgnoreCase) || c.Contains("Mangal", StringComparison.OrdinalIgnoreCase)))
                 score += 100.0;
 
-            if (v.SignatureItems != null && v.SignatureItems.Any(s => s.Contains("Kebap", StringComparison.OrdinalIgnoreCase) || s.Contains("Et", StringComparison.OrdinalIgnoreCase) || s.Contains("Izgara", StringComparison.OrdinalIgnoreCase) || s.Contains("Köfte", StringComparison.OrdinalIgnoreCase)))
+            if (!string.IsNullOrEmpty(v.Address) && (v.Address.Contains("Sahil", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Rıhtım", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Kordon", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Marina", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Yalı", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Deniz", StringComparison.OrdinalIgnoreCase) || v.Address.Contains("Kordon", StringComparison.OrdinalIgnoreCase)))
+                score += 80.0;
+
+            if (v.Name.Contains("Sahil", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Marina", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Deniz", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Kıyı", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Yalı", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Boğaz", StringComparison.OrdinalIgnoreCase))
+                score += 80.0;
+        }
+
+        // 4. TATLI / CHEESECAKE / SAN SEBASTIAN / KAHVE / BUTİK KAFE / KRUVASAN NİYETİ
+        bool isDessertPrompt = p.Contains("tatlı") || p.Contains("tatli") || p.Contains("kahve") || p.Contains("cheesecake") 
+            || p.Contains("san sebastian") || p.Contains("pasta") || p.Contains("kruvasan") || p.Contains("kafe") 
+            || p.Contains("cafe") || p.Contains("çikolata") || p.Contains("cikolata") || p.Contains("roastery") 
+            || p.Contains("fırın") || p.Contains("bakery") || p.Contains("waffle") || p.Contains("tiramisu");
+
+        if (isDessertPrompt)
+        {
+            bool isDessertVenue = searchable.Contains("tatlı") || searchable.Contains("kahve") || searchable.Contains("cafe") 
+                || searchable.Contains("kafe") || searchable.Contains("bakery") || searchable.Contains("pasta") || searchable.Contains("roaster");
+
+            if (isDessertVenue)
+            {
+                score += 250.0;
+            }
+        }
+
+        // 5. MEYHANE / RAKI / KOKTEYL / PUB / BİRA / ŞARAP / BAR NİYETİ
+        bool isDrinkPrompt = p.Contains("kokteyl") || p.Contains("pub") || p.Contains("bira") || p.Contains("bar") 
+            || p.Contains("şarap") || p.Contains("sarap") || p.Contains("meyhane") || p.Contains("rakı") 
+            || p.Contains("raki") || p.Contains("fasıl") || p.Contains("canlı müzik");
+
+        if (isDrinkPrompt)
+        {
+            if (v.HasAlcohol) score += 60.0;
+            if (searchable.Contains("meyhane") || searchable.Contains("kokteyl") || searchable.Contains("pub") || searchable.Contains("bar") || searchable.Contains("şarap"))
+                score += 200.0;
+        }
+
+        // 6. KAHVALTI & BRUNCH / SERPME KAHVALTI NİYETİ
+        bool isBreakfastPrompt = p.Contains("kahvaltı") || p.Contains("kahvalti") || p.Contains("brunch") 
+            || p.Contains("serpme") || p.Contains("menemen") || p.Contains("pancake") || p.Contains("omlet");
+
+        if (isBreakfastPrompt)
+        {
+            if (searchable.Contains("kahvaltı") || searchable.Contains("brunch") || searchable.Contains("serpme"))
+                score += 250.0;
+        }
+
+        // 7. SESSİZ / SAKİN / ÇALIŞMA / LAPTOP / PRİZ / HUZUR NİYETİ
+        bool isQuietPrompt = p.Contains("sessiz") || p.Contains("sakin") || p.Contains("çalışma") || p.Contains("calisma") 
+            || p.Contains("laptop") || p.Contains("priz") || p.Contains("kitap") || p.Contains("huzur") || p.Contains("dingin");
+
+        if (isQuietPrompt)
+        {
+            if (v.NoiseLevel == NoiseLevel.WhisperQuiet) score += 120.0;
+            if (v.HasWifiAndSockets) score += 80.0;
+            if (searchable.Contains("sessiz") || searchable.Contains("sakin") || searchable.Contains("huzur") || searchable.Contains("çalışma"))
+                score += 100.0;
+        }
+
+        // 8. ROMANTİK / LOŞ IŞIK / ŞIK / İLK BULUŞMA NİYETİ
+        bool isRomanticPrompt = p.Contains("romantik") || p.Contains("loş") || p.Contains("los") || p.Contains("mum") 
+            || p.Contains("baş başa") || p.Contains("bas basa") || p.Contains("şık") || p.Contains("zarif");
+
+        if (isRomanticPrompt)
+        {
+            if (searchable.Contains("romantik") || searchable.Contains("şık") || searchable.Contains("loş"))
+                score += 150.0;
+            if (v.FirstDateSuitabilityScore >= 9.0) score += 60.0;
+        }
+
+        // 9. AÇIK HAVA / BAHÇE / TERAS NİYETİ
+        bool isOutdoorPrompt = p.Contains("bahçe") || p.Contains("bahce") || p.Contains("açık hava") 
+            || p.Contains("acik hava") || p.Contains("teras") || p.Contains("doğa") || p.Contains("doga") || p.Contains("yeşillik");
+
+        if (isOutdoorPrompt)
+        {
+            if (v.HasOutdoorSeating) score += 80.0;
+            if (searchable.Contains("bahçe") || searchable.Contains("teras") || searchable.Contains("doğa"))
                 score += 70.0;
-
-            if (v.Name.Contains("Ocakbaşı", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Kebap", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Mangal", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Et", StringComparison.OrdinalIgnoreCase))
-                score += 80.0;
         }
 
-        // 3. Tatlı / Kahve / Butik Kafe Niyeti
-        if (p.Contains("tatlı") || p.Contains("tatli") || p.Contains("kahve") || p.Contains("cheesecake") || p.Contains("pasta") || p.Contains("kruvasan") || p.Contains("kafe") || p.Contains("cafe") || p.Contains("çikolata") || p.Contains("roastery"))
-        {
-            if (v.CuisineTypes != null && v.CuisineTypes.Any(c => c.Contains("Tatlı", StringComparison.OrdinalIgnoreCase) || c.Contains("Kahve", StringComparison.OrdinalIgnoreCase) || c.Contains("Pasta", StringComparison.OrdinalIgnoreCase)))
-                score += 80.0;
-
-            if (v.SignatureItems != null && v.SignatureItems.Any(s => s.Contains("Cheesecake", StringComparison.OrdinalIgnoreCase) || s.Contains("Tatlı", StringComparison.OrdinalIgnoreCase) || s.Contains("Kahve", StringComparison.OrdinalIgnoreCase) || s.Contains("Kek", StringComparison.OrdinalIgnoreCase) || s.Contains("Pasta", StringComparison.OrdinalIgnoreCase)))
-                score += 60.0;
-
-            if (v.Name.Contains("Coffee", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Cafe", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Kafe", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Roaster", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Fırın", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Bakery", StringComparison.OrdinalIgnoreCase))
-                score += 60.0;
-        }
-
-        // 4. Kokteyl / Pub / Bira / Şarap / Meyhane Niyeti
-        if (p.Contains("kokteyl") || p.Contains("pub") || p.Contains("bira") || p.Contains("bar") || p.Contains("şarap") || p.Contains("sarap") || p.Contains("meyhane") || p.Contains("rakı") || p.Contains("raki"))
-        {
-            if (v.HasAlcohol) score += 50.0;
-            if (v.CuisineTypes != null && v.CuisineTypes.Any(c => c.Contains("Kokteyl", StringComparison.OrdinalIgnoreCase) || c.Contains("Pub", StringComparison.OrdinalIgnoreCase) || c.Contains("Bar", StringComparison.OrdinalIgnoreCase) || c.Contains("Meyhane", StringComparison.OrdinalIgnoreCase)))
-                score += 80.0;
-
-            if (v.Name.Contains("Pub", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Bar", StringComparison.OrdinalIgnoreCase) || v.Name.Contains("Meyhane", StringComparison.OrdinalIgnoreCase))
-                score += 60.0;
-        }
-
-        // 5. Sessiz / Sakin / Çalışma / Laptop Niyeti
-        if (p.Contains("sessiz") || p.Contains("sakin") || p.Contains("çalışma") || p.Contains("calisma") || p.Contains("laptop") || p.Contains("priz") || p.Contains("kitap") || p.Contains("huzur"))
-        {
-            if (v.NoiseLevel == NoiseLevel.WhisperQuiet) score += 70.0;
-            if (v.HasWifiAndSockets) score += 50.0;
-            if (v.VibeTags != null && v.VibeTags.Any(t => t.Contains("Sessiz", StringComparison.OrdinalIgnoreCase) || t.Contains("Sakin", StringComparison.OrdinalIgnoreCase) || t.Contains("Huzur", StringComparison.OrdinalIgnoreCase)))
-                score += 60.0;
-        }
-
-        // 6. Açık Hava / Bahçe / Teras Niyeti
-        if (p.Contains("bahçe") || p.Contains("bahce") || p.Contains("açık hava") || p.Contains("acik hava") || p.Contains("teras") || p.Contains("doğa") || p.Contains("doga") || p.Contains("yeşillik") || p.Contains("piknik"))
-        {
-            if (v.HasOutdoorSeating) score += 70.0;
-            if (v.VibeTags != null && v.VibeTags.Any(t => t.Contains("Bahçe", StringComparison.OrdinalIgnoreCase) || t.Contains("Teras", StringComparison.OrdinalIgnoreCase) || t.Contains("Doğa", StringComparison.OrdinalIgnoreCase)))
-                score += 60.0;
-            if (v.ViewType != null && v.ViewType.Any(t => t.Contains("Bahçe", StringComparison.OrdinalIgnoreCase) || t.Contains("Doğa", StringComparison.OrdinalIgnoreCase)))
-                score += 50.0;
-        }
-
-        // 7. Kelime bazlı genel eşleşme
+        // 10. Kelime bazlı genel eşleşme
         var tokens = p.Split(new[] { ' ', ',', '.', '!', '?', '-', '/', '&' }, StringSplitOptions.RemoveEmptyEntries);
-        var searchable = $"{v.Name} {v.Neighborhood} {v.Address} {string.Join(" ", v.VibeTags ?? new())} {string.Join(" ", v.CuisineTypes ?? new())} {string.Join(" ", v.SignatureItems ?? new())} {string.Join(" ", v.ViewType ?? new())} {v.BestTableTip}".ToLower();
-
         foreach (var token in tokens)
         {
             if (token.Length >= 3 && searchable.Contains(token))
             {
-                score += 20.0;
+                score += 25.0;
             }
         }
 
