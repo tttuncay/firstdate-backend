@@ -193,7 +193,11 @@ try
         ALTER TABLE ""Venues"" ADD COLUMN IF NOT EXISTS ""BestTimeToVisit"" VARCHAR(200) DEFAULT '';
         ALTER TABLE ""Venues"" ADD COLUMN IF NOT EXISTS ""RawMetadata"" TEXT NOT NULL DEFAULT '{}';
 
-        -- Mevcut mekanların DistrictId alanlarını isim eşleşmesiyle otomatik doldur
+        -- Mevcut mekanların DistrictId, Country ve City alanlarını otomatik doldur
+        UPDATE ""Venues"" SET ""Country"" = 'Türkiye' WHERE ""Country"" IS NULL OR ""Country"" = '';
+        UPDATE ""Venues"" SET ""CountryCode"" = 'TR' WHERE ""CountryCode"" IS NULL OR ""CountryCode"" = '';
+        UPDATE ""Venues"" SET ""City"" = 'İstanbul' WHERE ""City"" IS NULL OR ""City"" = '';
+
         UPDATE ""Venues"" v
         SET ""DistrictId"" = d.""Id""
         FROM ""Districts"" d

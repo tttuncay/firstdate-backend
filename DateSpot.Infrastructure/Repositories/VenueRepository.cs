@@ -33,23 +33,25 @@ public class VenueRepository : IVenueRepository
         {
             var query = _context.Venues.AsNoTracking().AsQueryable();
 
-            // 1. Ülke Filtresi (Opsiyonel)
+            // 1. Ülke Filtresi (Opsiyonel & Güvenli)
             if (!string.IsNullOrWhiteSpace(country) && 
                 !country.Equals("Tümü", StringComparison.OrdinalIgnoreCase) && 
                 !country.Equals("Hepsi", StringComparison.OrdinalIgnoreCase) && 
                 !country.Equals("All", StringComparison.OrdinalIgnoreCase))
             {
-                query = query.Where(v => v.Country.ToLower() == country.ToLower() || v.CountryCode.ToLower() == country.ToLower());
+                var lowerCountry = country.ToLower();
+                query = query.Where(v => string.IsNullOrEmpty(v.Country) || v.Country.ToLower() == lowerCountry || v.CountryCode.ToLower() == lowerCountry);
             }
 
-            // 2. Şehir Filtresi (Opsiyonel)
+            // 2. Şehir Filtresi (Opsiyonel & Güvenli)
             if (!string.IsNullOrWhiteSpace(city) && 
                 !city.Equals("Tümü", StringComparison.OrdinalIgnoreCase) && 
                 !city.Equals("Hepsi", StringComparison.OrdinalIgnoreCase) && 
                 !city.Equals("Tüm Şehir", StringComparison.OrdinalIgnoreCase) && 
                 !city.Equals("All Cities", StringComparison.OrdinalIgnoreCase))
             {
-                query = query.Where(v => v.City.ToLower() == city.ToLower());
+                var lowerCity = city.ToLower();
+                query = query.Where(v => string.IsNullOrEmpty(v.City) || v.City.ToLower() == lowerCity);
             }
 
             // 3. İlçe / Bölge Filtresi (CoveredDistricts veya Tek İlçe)
@@ -61,14 +63,15 @@ public class VenueRepository : IVenueRepository
             else if (!string.IsNullOrWhiteSpace(district) && 
                 !district.Equals("Tüm İstanbul", StringComparison.OrdinalIgnoreCase) &&
                 !district.Equals("Tüm Şehir", StringComparison.OrdinalIgnoreCase) &&
-                !district.Equals("Hepsi", StringComparison.OrdinalIgnoreCase) &&
+                !district.Equals("Hepsi", StringComparison.OrdinalIgnoreCase) && 
                 !district.Equals("All", StringComparison.OrdinalIgnoreCase))
             {
-                query = query.Where(v => v.District.ToLower() == district.ToLower());
+                var lowerDistrict = district.ToLower();
+                query = query.Where(v => v.District.ToLower() == lowerDistrict);
             }
 
             // 4. Bütçe Filtresi
-            if (maxPriceLevel.HasValue)
+            if (maxPriceLevel.HasValue && maxPriceLevel.Value > 0)
             {
                 query = query.Where(v => v.PriceLevel <= maxPriceLevel.Value);
             }
