@@ -16,6 +16,7 @@ public interface IVenueRepository
         bool? requiresOutdoor = null,
         string? occasion = null,
         string? venueType = null,
+        string? customPrompt = null,
         int candidateLimit = 150,
         CancellationToken cancellationToken = default);
 

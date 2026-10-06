@@ -44,7 +44,8 @@ public class RecommendationService : IRecommendationService
             requiresOutdoor: request.OutdoorRequired,
             occasion: request.Occasion,
             venueType: request.VenueType,
-            candidateLimit: 35,
+            customPrompt: request.Prompt,
+            candidateLimit: 40,
             cancellationToken: cancellationToken);
 
         if (candidates == null || !candidates.Any())
