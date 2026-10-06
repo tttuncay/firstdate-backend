@@ -125,11 +125,12 @@ public class VenueRepository : IVenueRepository
                 .Take(fetchPoolSize)
                 .ToListAsync(cancellationToken);
 
-            // Eğer prompt girilmişse, prompt anlamsal ilgisine (Relevance) göre sırala
-            if (!string.IsNullOrWhiteSpace(customPrompt) && pool.Any())
+            // Eğer prompt veya mekan tarzı seçilmişse, anlamsal ilgiye (Relevance) göre sırala
+            string combinedSearch = $"{venueType} {customPrompt}".Trim();
+            if (!string.IsNullOrWhiteSpace(combinedSearch) && pool.Any())
             {
                 pool = pool
-                    .Select(v => new { Venue = v, Score = CalculatePromptRelevance(v, customPrompt) })
+                    .Select(v => new { Venue = v, Score = CalculatePromptRelevance(v, combinedSearch) })
                     .OrderByDescending(x => x.Score)
                     .ThenByDescending(x => x.Venue.GoogleRating)
                     .ThenByDescending(x => x.Venue.ReviewCount)
