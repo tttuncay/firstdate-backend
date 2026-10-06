@@ -196,6 +196,16 @@ public class RecommendationService : IRecommendationService
             {
                 score += 25.0;
             }
+            else if (occ.Contains("piknik") || occ.Contains("doğa") || occ.Contains("açık hava") || occ.Contains("yürüyüş"))
+            {
+                bool isOutdoorSpot = venue.SuitableOccasions.Any(o => o.ToLower().Contains("açık hava") || o.ToLower().Contains("piknik") || o.ToLower().Contains("doğa"))
+                    || venue.VibeTags.Any(v => v.ToLower().Contains("piknik") || v.ToLower().Contains("seyir tepesi") || v.ToLower().Contains("doğa"));
+                
+                if (isOutdoorSpot)
+                    score += 35.0;
+                else
+                    score -= 15.0;
+            }
             else if (venue.SuitableOccasions.Any())
             {
                 score += 10.0;
@@ -206,9 +216,16 @@ public class RecommendationService : IRecommendationService
         if (!string.IsNullOrWhiteSpace(req.VenueType))
         {
             var vt = req.VenueType.ToLower();
-            var allVibeStr = string.Join(" ", venue.VibeTags).ToLower() + " " + venue.Name.ToLower();
+            var allVibeStr = string.Join(" ", venue.VibeTags).ToLower() + " " + string.Join(" ", venue.CuisineTypes).ToLower() + " " + venue.Name.ToLower();
 
-            if (vt.Contains("kahve") || vt.Contains("kafe") || vt.Contains("tatlı"))
+            if (vt.Contains("piknik") || vt.Contains("doğa") || vt.Contains("seyir") || vt.Contains("koru") || vt.Contains("park"))
+            {
+                if (allVibeStr.Contains("piknik") || allVibeStr.Contains("seyir") || allVibeStr.Contains("doğa") || allVibeStr.Contains("koru") || allVibeStr.Contains("park") || allVibeStr.Contains("tepe") || allVibeStr.Contains("açık hava"))
+                    score += 35.0;
+                else
+                    score -= 20.0;
+            }
+            else if (vt.Contains("kahve") || vt.Contains("kafe") || vt.Contains("tatlı"))
             {
                 if (allVibeStr.Contains("kahve") || allVibeStr.Contains("tatlı") || allVibeStr.Contains("butik") || allVibeStr.Contains("kafe"))
                     score += 20.0;
