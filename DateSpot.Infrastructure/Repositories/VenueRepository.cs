@@ -315,7 +315,17 @@ public class VenueRepository : IVenueRepository
                 score += 70.0;
         }
 
-        // 10. Kelime bazlı genel eşleşme
+        // 10. EVCİL HAYVAN / KÖPEK DOSTU NİYETİ (Prompt üzerinden akıllı ve esnek eşleşme)
+        bool isPetPrompt = p.Contains("köpek") || p.Contains("kopek") || p.Contains("evcil hayvan") 
+            || p.Contains("pet friendly") || p.Contains("hayvan dostu") || p.Contains("kedi");
+        if (isPetPrompt)
+        {
+            if (v.IsPetFriendly) score += 120.0;
+            if (v.HasOutdoorSeating) score += 80.0;
+            if (searchable.Contains("bahçe") || searchable.Contains("teras") || searchable.Contains("park")) score += 60.0;
+        }
+
+        // 11. Kelime bazlı genel eşleşme
         var tokens = p.Split(new[] { ' ', ',', '.', '!', '?', '-', '/', '&' }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var token in tokens)
         {
