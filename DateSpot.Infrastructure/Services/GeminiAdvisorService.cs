@@ -67,6 +67,22 @@ public class GeminiAdvisorService : IGeminiAdvisorService
                 ? $"\n- 🪄 KULLANICININ ÖZEL HAYALİNDEKİ MEKAN METNİ (Kendi İfadeleriyle): \"{customPrompt}\"\n(ÖNEMLİ: Bu özel metindeki tüm atmosfer, manzara, menü ve müzik detaylarını en yüksek öncelikle dikkate al!)"
                 : "";
 
+            string occLower = occasionText.ToLower();
+            string occasionRules = occLower switch
+            {
+                var o when o.Contains("ilk buluşma") || o.Contains("romantik") =>
+                    "KESİN KURAL (İLK BULUŞMA): Salaş dönerci, büfe, pideci veya gürültülü/kasıntı yerleri ASLA seçme. Göz teması, sohbet konforu, sıcak ışık ve özenli atmosferi en üste koy.",
+                var o when o.Contains("çalışma") || o.Contains("iş") || o.Contains("kahve") =>
+                    "KESİN KURAL (KAHVE & ÇALIŞMA): Meyhane, ocakbaşı, bar veya gürültülü mekanları ASLA seçme. Wi-Fi/priz imkanı olan, sessiz/dengeli ses seviyeli, nitelikli kahve ve çalışma/toplantı konforu sunan mekanları seç.",
+                var o when o.Contains("arkadaş") || o.Contains("sosyal") =>
+                    "KESİN KURAL (ARKADAŞ BULUŞMASI): Samimi muhabbete, paylaşımlı lezzetlere ve seçilen mekan tarzına (pub, meyhane, ocakbaşı, bistro veya sosyal kafe) en uygun dinamik mekanları seç.",
+                var o when o.Contains("aile") || o.Contains("sofra") =>
+                    "KESİN KURAL (AİLE SOFRASI): Gece kulübü, bar veya pub tarzı yerleri ASLA seçme. Masaları ferah, servisi özenli, kahvaltı veya aile yemeğine uygun nezih mekanları seç.",
+                var o when o.Contains("kutlama") || o.Contains("doğum") || o.Contains("yıl dönümü") =>
+                    "KESİN KURAL (KUTLAMA & ÖZEL GÜN): Sıradan veya salaş yerleri ASLA seçme. Manzarası, şık sunumu, enerjisi veya fine-dining/kutlama ambiyansıyla özel hissettiren mekanları seç.",
+                _ => "KESİN KURAL: Kullanıcının seçtiği mekan tarzına ve özel isteğine %100 uyan mekanları en üste sırala."
+            };
+
             var venuesSummary = candidatePool.Select(v => new
             {
                 v.Id,
@@ -101,7 +117,8 @@ Kullanıcı İstanbul ({district}) bölgesinde şu niyetle bir mekan arıyor:
 
 GÖREVİN:
 Aşağıdaki aday mekan havuzunu ({venuesSummary.Count} mekan) derinlemesine incele.
-Kullanıcının niyetine ve ambiyansına EN MÜKEMMEL uyan {targetCount} mekanı SEÇ ve en yüksek uyumdan en düşüğe doğru 1'den {targetCount}'a sırala.
+{occasionRules}
+Kullanıcının niyetine, buluşma türüne ve seçtiği mekan tarzına ({venueTypeText}) EN MÜKEMMEL uyan {targetCount} mekanı SEÇ ve en yüksek uyumdan en düşüğe doğru 1'den {targetCount}'a sırala.
 
 Her mekan için şu alanları üret:
 1. id: Mekanın GUID'i (tam eşleşmeli).

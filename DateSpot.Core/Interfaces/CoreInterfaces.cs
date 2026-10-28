@@ -19,6 +19,8 @@ public interface IVenueRepository
         string? occasion = null,
         string? venueType = null,
         string? customPrompt = null,
+        int? noisePreference = null,
+        string? groupSize = null,
         int candidateLimit = 150,
         CancellationToken cancellationToken = default);
 

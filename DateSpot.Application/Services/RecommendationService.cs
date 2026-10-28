@@ -47,6 +47,8 @@ public class RecommendationService : IRecommendationService
             occasion: request.Occasion,
             venueType: request.VenueType,
             customPrompt: request.Prompt,
+            noisePreference: request.NoisePreference,
+            groupSize: request.GroupSize,
             candidateLimit: 40,
             cancellationToken: cancellationToken);
 
@@ -186,10 +188,22 @@ public class RecommendationService : IRecommendationService
             }
         }
 
-        // Eğer Gemini API anahtarı tanımsızsa veya istek zaman aşımına uğrarsa, en kaliteli adayları döndür
+        // Eğer Gemini API anahtarı tanımsızsa veya istek zaman aşımına uğrarsa, çok boyutlu algoritmik puanlamayla en kaliteli adayları döndür
         var fallbackList = candidates.Take(10).Select((v, index) =>
         {
-            double matchScore = Math.Round(98.0 - (index * 1.5), 1);
+            var occLower = (request.Occasion ?? string.Empty).ToLower();
+            var occasionsStr = string.Join(" ", v.SuitableOccasions ?? new()).ToLower();
+            bool hasOccasionMatch = !string.IsNullOrWhiteSpace(occLower) && occasionsStr.Contains(occLower.Split(' ')[0]);
+
+            double baseRankScore = 97.5 - (index * 1.3);
+            double ratingBoost = Math.Clamp((v.GoogleRating - 4.4) * 3.0, -1.5, 1.8);
+            double overallScore = Math.Clamp(Math.Round(baseRankScore + ratingBoost, 1), 82.0, 99.0);
+
+            double occScore = Math.Clamp(Math.Round(overallScore + (hasOccasionMatch ? 1.2 : -1.0), 1), 80.0, 99.0);
+            double vibeScore = Math.Clamp(Math.Round(overallScore + (request.NoisePreference.HasValue && (int)v.NoiseLevel == request.NoisePreference.Value ? 1.4 : -0.6), 1), 80.0, 99.0);
+            double seatingScore = Math.Clamp(Math.Round(overallScore + (!string.IsNullOrEmpty(v.TableSpacing) && v.TableSpacing.Contains("Geniş", StringComparison.OrdinalIgnoreCase) ? 1.5 : -0.5), 1), 80.0, 99.0);
+            double budgetScore = Math.Clamp(Math.Round(overallScore + (!request.MaxPriceLevel.HasValue || v.PriceLevel <= request.MaxPriceLevel.Value ? 1.0 : -3.0), 1), 80.0, 99.0);
+
             return new VenueRecommendationDto
             {
                 Id = v.Id,
@@ -209,14 +223,14 @@ public class RecommendationService : IRecommendationService
                 TimeZone = v.TimeZone,
                 GoogleRating = v.GoogleRating,
                 ReviewCount = v.ReviewCount,
-                MatchScore = matchScore,
+                MatchScore = overallScore,
                 MatchBreakdown = new MatchBreakdownDto
                 {
-                    OccasionScore = Math.Round(matchScore + 0.5, 1),
-                    VibeScore = Math.Round(matchScore - 0.5, 1),
-                    SeatingScore = Math.Round(matchScore - 1.0, 1),
-                    BudgetScore = Math.Round(matchScore, 1),
-                    OverallMatch = matchScore
+                    OccasionScore = occScore,
+                    VibeScore = vibeScore,
+                    SeatingScore = seatingScore,
+                    BudgetScore = budgetScore,
+                    OverallMatch = overallScore
                 },
                 HeroImageUrl = v.HeroImageUrl,
                 GalleryImages = v.GalleryImages ?? new(),
@@ -257,8 +271,10 @@ public class RecommendationService : IRecommendationService
                 BestTimeToVisit = v.BestTimeToVisit,
                 Advice = new DateAdviceDto
                 {
-                    WhyThisSpot = $"{v.Name}, seçilen kriterler için kaliteli atmosferi ve yüksek puanıyla öne çıkmaktadır.",
-                    IcebreakerTopic = "Mekanın ambiyansı ve semtin popüler noktaları üzerine sohbet açabilirsiniz.",
+                    WhyThisSpot = !string.IsNullOrWhiteSpace(request.Occasion)
+                        ? $"{v.Name}, '{request.Occasion}' planın için {(!string.IsNullOrWhiteSpace(v.LightingStyle) ? v.LightingStyle.ToLower() + " atmosferi, " : "")}{v.TableSpacing.ToLower()} oturma düzeni ve {v.GoogleRating:F1} memnuniyet puanıyla öne çıkıyor."
+                        : $"{v.Name}, seçilen kriterler için kaliteli atmosferi ve yüksek puanıyla öne çıkmaktadır.",
+                    IcebreakerTopic = "Mekanın imza lezzetleri ve semtin keyifli atmosferi üzerine sohbet açabilirsiniz.",
                     TableTactics = !string.IsNullOrWhiteSpace(v.BestTableTip) ? v.BestTableTip : "Girişten uzak ve rahat konuşabileceğiniz konforlu bir köşe masa tercih edin.",
                     IdealOrderRecommendation = (v.SignatureItems != null && v.SignatureItems.Any()) ? string.Join(", ", v.SignatureItems.Take(2)) : "Günün spesiyali ve meşhur içeceği."
                 }
